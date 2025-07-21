@@ -1,50 +1,46 @@
-<<<<<<< HEAD
-<<<<<<< HEAD
-# Welcome to Remix!
+# 📹 TestimonialApp
 
-- 📖 [Remix docs](https://remix.run/docs)
+A full-stack web platform to **collect, manage, and showcase both text and video testimonials** with sharing, downloading, and embedding capabilities.
 
-## Development
+---
 
-Run the dev server:
+## 🚀 Features
 
-```shellscript
+- ✅ Collect **video and text testimonials**
+- ✅ Rating system with stars
+- ✅ Secure **JWT-based authentication**
+- ✅ Role-based permissions (space owners)
+- ✅ Upload videos/images with **Cloudinary integration**
+- ✅ Share testimonials via:
+  - Public link
+  - Social platforms (X/Twitter, Facebook)
+  - Embeddable widget (upcoming)
+- ✅ Filter testimonials (All / Videos / Text)
+- ✅ Smooth transitions and responsive design
+- ✅ Download testimonials as PDF
+- ✅ Dynamic space management (custom spaces per user)
+
+---
+
+## 🛠️ Tech Stack
+
+- **Frontend**: Remix + React + Tailwind CSS
+- **Backend**: Node.js + Express.js
+- **Database**: MongoDB with Mongoose
+- **Cloud Storage**: Cloudinary
+- **Authentication**: JWT (Access & Refresh Tokens)
+- **State Handling**: Native Remix loader/actions (No Redux)
+
+---
+
+## 📦 Installation & Setup
+
+```bash
+# Clone the repo
+git clone https://github.com/Krockzz/TestimonialApp.git
+
+# Install dependencies
+npm install
+
+# Run development server
 npm run dev
-```
-
-## Deployment
-
-First, build your app for production:
-
-```sh
-npm run build
-```
-
-Then run the app in production mode:
-
-```sh
-npm start
-```
-
-Now you'll need to pick a host to deploy it to.
-
-### DIY
-
-If you're familiar with deploying Node applications, the built-in Remix app server is production-ready.
-
-Make sure to deploy the output of `npm run build`
-
-- `build/server`
-- `build/client`
-
-## Styling
-
-This template comes with [Tailwind CSS](https://tailwindcss.com/) already configured for a simple default starting experience. You can use whatever css framework you prefer. See the [Vite docs on css](https://vitejs.dev/guide/features.html#css) for more information.
-=======
-# TestimonialApp
-An WebApp which collects Testimonials
->>>>>>> 2786bfa97465de50e9e7e09a7c2630ee5d387822
-=======
-# TestimonialApp
-An WebApp which collects Testimonials
->>>>>>> 360ecda2a20ac5f29ad1675f9b879d4665a8551e
