@@ -1,4 +1,5 @@
 <<<<<<< HEAD
+<<<<<<< HEAD
 # Welcome to Remix!
 
 - 📖 [Remix docs](https://remix.run/docs)
@@ -43,3 +44,7 @@ This template comes with [Tailwind CSS](https://tailwindcss.com/) already config
 # TestimonialApp
 An WebApp which collects Testimonials
 >>>>>>> 2786bfa97465de50e9e7e09a7c2630ee5d387822
+=======
+# TestimonialApp
+An WebApp which collects Testimonials
+>>>>>>> 360ecda2a20ac5f29ad1675f9b879d4665a8551e
