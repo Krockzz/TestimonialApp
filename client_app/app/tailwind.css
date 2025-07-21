@@ -1,0 +1,14 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Base styles for dark theme */
+html,
+body {
+  @apply bg-gray-950 text-white;
+
+  /* This ensures system preference works if you allow it */
+  @media (prefers-color-scheme: dark) {
+    color-scheme: dark;
+  }
+}

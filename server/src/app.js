@@ -1,0 +1,36 @@
+import express from "express"
+import cors from "cors"
+import cookieParser from "cookie-parser"
+
+// Creating an instance of app
+const app = express();
+
+app.use(cors({
+    origin:"http://localhost:5173",
+    credentials: true,
+}))
+
+app.use(express.json({
+    limit:"16kb"
+}))
+
+app.use(express.urlencoded({
+    extended: true,
+    limit: "16kb"
+}))
+
+app.use(cookieParser());
+app.use(express.static("public"))
+
+export  {app}
+
+import router1 from "../src/routes/User.routes.js"
+import router2 from "../src/routes/Space.routes.js"
+import router3 from "../src/routes/Testimonial.routes.js"
+import router4 from "../src/routes/comment.routes.js"
+
+
+app.use("/api/v1/users" , router1)
+app.use("/api/v1/users/spaces" , router2)
+app.use("/api/v1/users/Testimonial" , router3)
+app.use("/api/v1/users/comments" , router4)
