@@ -1,5 +1,5 @@
 import { json, useLoaderData, redirect } from "@remix-run/react";
-import { requireUser } from "../../utilities/requireUser";
+import { requireUser } from "../../../utilities/requireUser"
 import { Pencil, Inbox } from "lucide-react";
 import TestimonialCard from "../components/TestimonialCard";
 import { useState } from "react";

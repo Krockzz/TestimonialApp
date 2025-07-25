@@ -1,6 +1,5 @@
 import { json, useLoaderData } from "@remix-run/react";
 import Lottie from "lottie-react";
-import sprinkle from "../../utilities/sprinkle.json"
 import { FaStar } from "react-icons/fa";
 
 const API_URI = import.meta.env.VITE_API_URL;

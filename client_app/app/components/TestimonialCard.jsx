@@ -16,7 +16,7 @@ import { IoIosLink } from "react-icons/io";
 import EmbedTestimonial from "../components/EmbedTestimonial";
 import ShowTestimonial from "../components/ShowTestimonial";
 import Lottie from "lottie-react";
-import Creating from "../../utilities/Manufacturing (1).json";
+import Creating from "../../../utilities/Manufacturing (1).json"
 import { FaStar } from "react-icons/fa";
 
 export default function TestimonialCard({ testimonial, avatar, spaceId }) {
