@@ -1,4 +1,4 @@
-import { redirect } from "@remix-run/node";
+import { redirect } from "@remix-run/react";
 
 const API_URI = import.meta.env.VITE_API_URL;
 

@@ -3,7 +3,7 @@ import { FaStar } from "react-icons/fa";
 import { motion, AnimatePresence } from "framer-motion";
 import { Form } from "@remix-run/react";
 import Lottie from "lottie-react";
-import Uploading from "../../utilities/Uploading.json";
+import Uploading from "../../../utilities/Uploading.json";
 
 export default function TestimonialForm({
   space,

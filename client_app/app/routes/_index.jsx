@@ -1,7 +1,7 @@
 import Hero from "../components/Hero.jsx";
 import Features from "../components/Features.jsx";
 import Footer from "../components/Footer.jsx"
-import {requireUser} from "../../utilities/requireUser.jsx"
+import {requireUser} from "../../../utilities/requireUser.jsx"
 import { useLoaderData } from "@remix-run/react";
 import { json } from "@remix-run/react";
 

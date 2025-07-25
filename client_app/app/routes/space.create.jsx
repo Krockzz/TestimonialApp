@@ -1,7 +1,7 @@
 import { json, useLoaderData, useNavigate , redirect } from "@remix-run/react";
 import SpaceForm from "../components/SpaceForm";
 import Modal from "../components/Modal";
-import { requireUser } from "../../utilities/requireUser";
+import { requireUser } from "../../../utilities/requireUser";
 
 
 

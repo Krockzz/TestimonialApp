@@ -1,5 +1,5 @@
 import { json, redirect , useLoaderData } from "@remix-run/react";
-import { requireUser } from "../../utilities/requireUser";
+import { requireUser } from "../../../utilities/requireUser";
 import SpaceForm from "../components/SpaceForm";
 
 const API_URI = import.meta.env.VITE_API_URL;
