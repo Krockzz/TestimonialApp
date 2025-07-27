@@ -6,7 +6,7 @@ dotevn.config({
     path:"./.env"
 })
 
-const port = process.env.port || 8000
+const port = process.env.port ||  8000
 
 DB()
 .then(() => {
