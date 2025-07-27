@@ -38,16 +38,14 @@ export default function Footer() {
         </div>
 
         
-      
-
-    
-
         <div className="border-t border-gray-700 pt-6 mt-6">
           <p className="text-gray-400">
             &copy; 2025 YourCompany. All Rights Reserved.
           </p>
         </div>
       </div>
+
+      
 
       
 
