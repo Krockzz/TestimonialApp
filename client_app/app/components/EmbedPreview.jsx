@@ -12,7 +12,7 @@ export default function EmbedBox() {
         Embed the wall of love to your website in 1 minute
       </p>
 
-      <div className="bg-[#111827] rounded-md overflow-x-auto px-4 py-4 text-sm font-mono whitespace-pre-wrap leading-relaxed">
+      <div className="bg-[#111827]  rounded-md overflow-x-auto px-4 py-4 text-sm font-mono whitespace-pre-wrap leading-relaxed">
         <code>
           <span className="text-[#7dd3fc">&lt;</span>
           <span className="text-[#f472b6]">iframe</span>{" "}
