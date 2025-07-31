@@ -1,12 +1,19 @@
 import { json, useLoaderData, redirect } from "@remix-run/react";
-import { requireUser } from "../../../utilities/requireUser"
-import { Pencil, Inbox } from "lucide-react";
+import { requireUser } from "../../../utilities/requireUser";
+import {
+  Pencil,
+  Inbox,
+  ChevronRight,
+  ChevronDown,
+  Youtube,
+  Twitter,
+  Instagram,
+} from "lucide-react";
 import TestimonialCard from "../components/TestimonialCard";
 import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 
 const API_URI = import.meta.env.VITE_API_URL;
-
 
 export async function loader({ request, params }) {
   const user = await requireUser(request);
@@ -31,7 +38,6 @@ export async function loader({ request, params }) {
   const TestimonialData = await res2.json();
 
   return json({ spaceData, TestimonialData });
-
 }
 
 export async function action({ request, params }) {
@@ -65,13 +71,13 @@ export async function action({ request, params }) {
   }
 }
 
-
 export default function TestimonialsOnly() {
   const { spaceData, TestimonialData } = useLoaderData();
   const space = spaceData.data;
   const testimonials = TestimonialData.data.docs;
 
   const [filter, setFilter] = useState("All");
+  const [showIntegrations, setShowIntegrations] = useState(false);
 
   const filteredTestimonials = testimonials.filter((t) => {
     if (filter === "All") return true;
@@ -119,6 +125,34 @@ export default function TestimonialsOnly() {
                 {item === "All" ? "All Testimonials" : item}
               </button>
             ))}
+
+          
+            <div className="mt-8">
+              <button
+                type="button"
+                onClick={() => setShowIntegrations((prev) => !prev)}
+                className="w-full text-left flex items-center justify-between text-white px-3 py-2 hover:bg-gray-800 transition rounded-md"
+              >
+                <span className="text-[15px] font-medium">Integrations</span>
+                {showIntegrations ? (
+                  <ChevronDown className="w-4 h-4 text-gray-400" />
+                ) : (
+                  <ChevronRight className="w-4 h-4 text-gray-400" />
+                )}
+              </button>
+
+              {showIntegrations && (
+                <div className="ml-4 mt-2 flex flex-col gap-2">
+                  <div className="flex items-center gap-2 text-gray-300 px-2 py-1 rounded hover:bg-gray-800 focus:border-b-2 focus:border-blue-500">
+                    Social Media <Twitter className="w-4 h-4" />
+                    <Instagram className="w-4 h-4" />
+                  </div>
+                  <div className="flex items-center gap-2 text-gray-300 px-2 py-1 rounded hover:bg-gray-800">
+                    Video <Youtube className="w-4 h-4" />
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </aside>
 
@@ -130,7 +164,7 @@ export default function TestimonialsOnly() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.4 ,  ease: "easeInOut" }}
+              transition={{ duration: 0.4, ease: "easeInOut" }}
               className="w-full flex flex-col gap-4"
             >
               {filteredTestimonials.length === 0 ? (

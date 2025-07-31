@@ -31,7 +31,7 @@ export default function Hero({ isAuthenticated }) {
       title: "A dashboard to manage all testimonials",
       description:
         "You will have a simple & clean dashboard to manage all testimonials in one place. It's like your email inbox, but it's designed for your social proof!",
-      image: "/images/moderation.png",
+      image: "/public/Testimonial3.png",
     },
     {
       title: "Embed Anywhere, Instantly",
@@ -101,8 +101,7 @@ export default function Hero({ isAuthenticated }) {
           </div>
 
           <p className="text-gray-400 text-base md:text-lg max-w-2xl mx-auto">
-            Simply copy and paste our embed code. Works on Webflow, WordPress,
-            Framer, and any no-code platform!
+            Simply copy and paste our embed code. Works on any no-code platform!
           </p>
         </div>
 
