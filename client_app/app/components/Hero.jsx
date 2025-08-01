@@ -18,7 +18,7 @@ export default function Hero({ isAuthenticated }) {
       title: "A dedicated landing page",
       description:
         "Create a dedicated landing page for your business. Share the page link easily via email, social media, or even SMS. Setup can be done in two minutes.",
-      image: "/public/Testimonial1.png",
+      image: "/Testimonial1.png",
     },
     {
       title: "Collect Video and text Testimonial",
@@ -31,13 +31,13 @@ export default function Hero({ isAuthenticated }) {
       title: "A dashboard to manage all testimonials",
       description:
         "You will have a simple & clean dashboard to manage all testimonials in one place. It's like your email inbox, but it's designed for your social proof!",
-      image: "/public/Testimonial3.png",
+      image: "/Testimonial3.png",
     },
     {
       title: "Embed Anywhere, Instantly",
       description:
         "Copy and paste one HTML snippet to embed your testimonial like this 👉 No dev needed.",
-      image: "/public/Testimonial2.png",
+      image: "/Testimonial2.png",
       reverse: true,
     },
   ];

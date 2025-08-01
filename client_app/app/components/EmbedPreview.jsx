@@ -9,7 +9,7 @@ export default function EmbedBox() {
     <div className="bg-[#1e293b] text-white p-6 rounded-xl shadow-md max-w-4xl mx-auto mt-12">
       <h2 className="text-2xl font-semibold mb-2">Try our sample embed code</h2>
       <p className="mb-4 text-gray-300">
-        Embed the wall of love to your website in 1 minute
+        Embed the testimonial to your website in 1 minute
       </p>
 
       <div className="bg-[#111827]  rounded-md overflow-x-auto px-4 py-4 text-sm font-mono whitespace-pre-wrap leading-relaxed">
