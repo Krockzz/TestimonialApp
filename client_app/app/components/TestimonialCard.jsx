@@ -5,16 +5,18 @@ import {
   Trash2,
   Download,
   Share2,
-  Facebook,
-  Twitter,
   Code2
 } from "lucide-react";
+import { FaXTwitter } from "react-icons/fa6";
+import { FaLinkedin } from "react-icons/fa";
 import { useSubmit } from "@remix-run/react";
 import ConfirmModal from "./ConfirmModal";
 import jsPDF from "jspdf";
 import { IoIosLink } from "react-icons/io";
 import EmbedTestimonial from "../components/EmbedTestimonial";
 import ShowTestimonial from "../components/ShowTestimonial";
+import ShareOnXModal from "./ShareOnXModal";
+import ShareOnLinkedInModal from "./ShareOnInModal";
 import Lottie from "lottie-react";
 import Creating from "../../../utilities/Manufacturing (1).json"
 import { FaStar } from "react-icons/fa";
@@ -29,6 +31,10 @@ export default function TestimonialCard({ testimonial, avatar, spaceId }) {
   const [showPublicLink, setShowPublicLink] = useState(false);
   const [loadingPublicLink, setLoadingPublicLink] = useState(false);
   const[isDownloading , setisDownloading] = useState(false);
+  const [sharingPlatform, setSharingPlatform] = useState(null);
+  const [loadingShareComponent, setLoadingShareComponent] = useState(false);
+  const [showShareOnXModal, setShowShareOnXModal] = useState(false);
+  const [showShareOnInModal , setShowShareOnInModal] = useState(false)
 
   const videoRef = useRef(null);
   const submit = useSubmit();
@@ -176,6 +182,29 @@ export default function TestimonialCard({ testimonial, avatar, spaceId }) {
     }
   }, [loadingPublicLink]);
 
+  const handleShareX = (platform) => {
+    if (platform === "X") {
+      setSharingPlatform(platform);
+      setLoadingShareComponent(true);
+      setTimeout(() => {
+        setLoadingShareComponent(false);
+        setShowShareOnXModal(true);
+      }, 5000);
+    }
+  };
+
+  const handleShareIn = (platform) => {
+    if(platform === "In"){
+      setSharingPlatform(platform)
+      setLoadingShareComponent(true)
+
+      setTimeout(() => {
+        setLoadingShareComponent(false)
+        setShowShareOnInModal(true)
+      } , 5000)
+    }
+  }
+
   return (
     <>
       <div className="relative bg-gray-900 text-white rounded-xl shadow-lg p-7 w-[900px] ml-auto mr-6 mb-10">
@@ -304,11 +333,15 @@ export default function TestimonialCard({ testimonial, avatar, spaceId }) {
                     <Code2 className="w-5 h-5 text-gray-400" /> Embed the testimonial
                   </button>
 
-                  <button className="flex items-center gap-3 px-4 py-2 hover:bg-gray-200 text-sm w-full text-left rounded-md">
-                    <Twitter className="w-5 h-5 text-blue-400" /> Share on X
+                  <button
+                  onClick={() => handleShareX("X")} 
+                  className="flex items-center gap-3 px-4 py-2 hover:bg-gray-200 text-sm w-full text-left rounded-md">
+                    <FaXTwitter className="w-5 h-5 text-blue-400" /> Share on X
                   </button>
-                  <button className="flex items-center gap-3 px-4 py-2 hover:bg-gray-200 text-sm w-full text-left rounded-md">
-                    <Facebook className="w-5 h-5 text-blue-700" /> Share on Facebook
+                  <button
+                  onClick={() => handleShareIn("In")} 
+                  className="flex items-center gap-3 px-4 py-2 hover:bg-gray-200 text-sm w-full text-left rounded-md">
+                    <FaLinkedin className="w-5 h-5 text-blue-700" /> Share on LinkedIn
                   </button>
                 </div>
               )}
@@ -385,7 +418,7 @@ export default function TestimonialCard({ testimonial, avatar, spaceId }) {
 
   ) : (
 
-    // Standard white modal for text testimonial
+  
     <div className="relative bg-white rounded-xl shadow-xl p-4 w-[90%] max-w-[800px] max-h-[90vh] overflow-y-auto">
       <button
         onClick={() => setShowPublicLink(false)}
@@ -403,9 +436,52 @@ export default function TestimonialCard({ testimonial, avatar, spaceId }) {
 
   )}
 
+ 
 </div>
 
+
+
       )}
+
+       {loadingShareComponent && (
+  <div className="fixed inset-0 z-[9999] bg-black/60 flex items-center justify-center px-4">
+    <div className="bg-white rounded-2xl shadow-2xl p-8 w-[360px] h-[280px] flex flex-col items-center justify-center space-y-6">
+      <Lottie
+        animationData={Creating}
+        className="w-[90px] h-[90px] text-blue-500"
+        loop
+        autoplay
+      />
+      <div className="text-center">
+        <p className="text-lg font-semibold text-gray-800">
+          Preparing your social share
+        </p>
+        <p className="mt-2 text-gray-500 text-sm">
+          Generating a beautiful preview for your testimonial. This usually takes a few seconds.
+        </p>
+      </div>
+    </div>
+  </div>
+)}
+
+
+      {showShareOnXModal && (
+  <ShareOnXModal
+    testimonial={testimonial}
+    onClose={() => setShowShareOnXModal(false)}
+  />
+)}
+
+
+
+      {showShareOnInModal && (
+  <ShareOnLinkedInModal
+    testimonial={testimonial}
+    onClose={() => setShowShareOnInModal(false)}
+  />
+)}
+
+
     </>
   );
 }

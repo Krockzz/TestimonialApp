@@ -1,6 +1,8 @@
 import { json, useLoaderData } from "@remix-run/react";
+import { useEffect, useState } from "react";
 import Lottie from "lottie-react";
 import { FaStar } from "react-icons/fa";
+import Sprinkle from "../../../utilities/Party  Celebration.json";
 
 const API_URI = import.meta.env.VITE_API_URL;
 
@@ -37,85 +39,139 @@ export const loader = async ({ request, params }) => {
   }
 };
 
+// 🔵 Helper to convert raw text links to clickable
+function parseLink(text) {
+  const urlRegex = /(https?:\/\/[^\s]+)/g;
+  const parts = text.split(urlRegex);
+  return parts.map((part, i) =>
+    urlRegex.test(part) ? (
+      <a
+        key={i}
+        href={part}
+        className="text-blue-600 underline"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        {part}
+      </a>
+    ) : (
+      <span key={i}>{part}</span>
+    )
+  );
+}
+
 export default function Show() {
   const { result } = useLoaderData();
   const testimonial = result["data"];
   const isVideo = Boolean(testimonial?.videoURL);
 
+  const [showSprinkle, setShowSprinkle] = useState(true);
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+    const timeout = setTimeout(() => {
+      setShowSprinkle(false);
+    }, 3000);
+
+    return () => clearTimeout(timeout);
+  }, []);
+
   return (
     <>
-    {/* <Lottie animationData={sprinkle} /> */}
-    <div className={`min-h-screen ${isVideo ? "bg-black" : "bg-white"} flex items-center justify-center px-4`}>
-      {/* Top-left heading (branding) */}
-      <div className="absolute top-6 left-6 flex items-center space-x-1">
-        <h1 className={`text-2xl font-extrabold ${isVideo ? "text-white" : "text-blue-600"}`}>
-          TestimonialApp
-        </h1>
-      </div>
-
-      {isVideo ? (
-        <div className="relative flex flex-col items-center justify-center w-full max-w-[800px] animate-fade-in-up">
-  <video
-    src={testimonial.videoURL}
-    controls
-    className="w-full rounded-xl mb-6"
-  />
-
-  
-  <div className="absolute bottom-[70px] right-4 flex items-center gap-3  px-3 py-1 rounded-lg">
-    {testimonial?.avatar && (
-      <img
-        src={testimonial.avatar}
-        alt="Avatar"
-        className="w-10 h-10 rounded-full object-cover"
-      />
-    )}
-    <p className="text-white font-medium">{testimonial.name}</p>
-  </div>
-</div>
-
-      ) : (
-        <div className="w-[1000px] border-[5px] border-blue-500 rounded-xl p-8 text-center animate-fade-in-up">
-          <h1 className="text-2xl font-bold mb-5 text-blue-600">TestimonialApp</h1>
-
-          {testimonial?.space.avatar && (
-            <img
-              src={testimonial.space.avatar}
-              alt="Avatar"
-              className="w-28 h-28 rounded-full mx-auto mb-5 object-cover"
-            />
-          )}
-
-             <div className="flex justify-center mb-4">
-                      {[...Array(5)].map((_, index) => (
-                        <FaStar
-                          key={index}
-                          className={`mx-1 text-xl ${
-                            index < testimonial.rating ? "text-yellow-400" : "text-gray-300"
-                          }`}
-                        />
-                      ))}
-                    </div>
-
-          <p className="text-gray-700 text-lg mb-4">
-            "{testimonial?.text || "No testimonial found."}"
-          </p>
-
-          <div className="flex items-center justify-center gap-3">
-            {testimonial?.avatar && (
-              <img
-                src={testimonial.avatar}
-                alt="Avatar"
-                className="w-16 h-16 rounded-full object-cover"
-              />
-            )}
-
-          
-            <p className="text-black font-semibold">{testimonial.name}</p>
-          </div>
+      {/* Sprinkle animation overlay */}
+      {showSprinkle && isClient && (
+        <div className={`fixed inset-0 z-50 ${isVideo ? "bg-black" : "bg-white"} flex items-center justify-center`}>
+          <Lottie
+            animationData={Sprinkle}
+            loop={false}
+            autoplay
+            className="w-[800px] h-[700px]"
+          />
         </div>
       )}
-    </div>
+
+      {/* Main testimonial content */}
+      {!showSprinkle && (
+        <div
+          className={`min-h-screen ${
+            isVideo ? "bg-black" : "bg-white"
+          } flex items-center justify-center px-4`}
+        >
+          {/* Top-left heading (branding) */}
+          <div className="absolute top-6 left-6 flex items-center space-x-1">
+            <h1
+              className={`text-2xl font-extrabold ${
+                isVideo ? "text-white" : "text-blue-600"
+              }`}
+            >
+              TestimonialApp
+            </h1>
+          </div>
+
+          {isVideo ? (
+            <div className="relative flex flex-col items-center justify-center w-full max-w-[800px] animate-fade-in-up">
+              <video
+                src={testimonial.videoURL}
+                controls
+                className="w-full rounded-xl mb-6"
+              />
+              <div className="absolute bottom-[70px] right-4 flex items-center gap-3 px-3 py-1 rounded-lg">
+                {testimonial?.avatar && (
+                  <img
+                    src={testimonial.avatar}
+                    alt="Avatar"
+                    className="w-10 h-10 rounded-full object-cover"
+                  />
+                )}
+                <p className="text-white font-medium">{testimonial.name}</p>
+              </div>
+            </div>
+          ) : (
+            <div className="w-[1000px] border-[5px] border-blue-500 rounded-xl p-8 text-center animate-fade-in-up">
+              <h1 className="text-2xl font-bold mb-5 text-blue-600">
+                TestimonialApp
+              </h1>
+
+              {testimonial?.space?.avatar && (
+                <img
+                  src={testimonial.space.avatar}
+                  alt="Avatar"
+                  className="w-28 h-28 rounded-full mx-auto mb-5 object-cover"
+                />
+              )}
+
+              <div className="flex justify-center mb-4">
+                {[...Array(5)].map((_, index) => (
+                  <FaStar
+                    key={index}
+                    className={`mx-1 text-xl ${
+                      index < testimonial.rating
+                        ? "text-yellow-400"
+                        : "text-gray-300"
+                    }`}
+                  />
+                ))}
+              </div>
+
+              <p className="text-gray-700 text-lg mb-4">
+                "{parseLink(testimonial?.text || "No testimonial found.")}"
+              </p>
+
+              <div className="flex items-center justify-center gap-3">
+                {testimonial?.avatar && (
+                  <img
+                    src={testimonial.avatar}
+                    alt="Avatar"
+                    className="w-16 h-16 rounded-full object-cover"
+                  />
+                )}
+                <p className="text-black font-semibold">{testimonial.name}</p>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
     </>
   );
 }
