@@ -1,5 +1,6 @@
 import { json, useLoaderData, redirect } from "@remix-run/react";
 import { requireUser } from "../../../utilities/requireUser";
+
 import {
   Pencil,
   Inbox,
@@ -9,7 +10,9 @@ import {
   Twitter,
   Instagram,
 } from "lucide-react";
+import { FaEnvelopeOpenText } from "react-icons/fa";
 import TestimonialCard from "../components/TestimonialCard";
+import Integration from "../components/Integration";
 import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 
@@ -78,6 +81,8 @@ export default function TestimonialsOnly() {
 
   const [filter, setFilter] = useState("All");
   const [showIntegrations, setShowIntegrations] = useState(false);
+  const [activePanel, setActivePanel] = useState("testimonials"); 
+
 
   const filteredTestimonials = testimonials.filter((t) => {
     if (filter === "All") return true;
@@ -85,6 +90,12 @@ export default function TestimonialsOnly() {
     if (filter === "Videos") return !!t.videoURL;
     return true;
   });
+
+  const filters = [
+    { label: "All", icon: Inbox },
+    { label: "Videos", icon: FaEnvelopeOpenText },
+    { label: "Text", icon: Pencil },
+  ];
 
   return (
     <section className="min-h-screen bg-gray-950 text-white py-8">
@@ -109,24 +120,35 @@ export default function TestimonialsOnly() {
       <hr className="border-t border-gray-700 mb-6" />
 
       <div className="w-full flex gap-6 px-6">
-        {/* Sidebar */}
         <aside className="w-48">
           <div className="flex flex-col gap-2 text-sm">
             <h2 className="text-white font-bold mb-4 text-xl">Inbox</h2>
-            {["All", "Videos", "Text"].map((item) => (
+
+            {filters.map(({ label, icon:Icon }) => (
               <button
-                key={item}
+                key={label}
                 type="button"
-                onClick={() => setFilter(item)}
-                className={`w-full text-left px-3 py-2 transition text-[15px]
-                  ${filter === item ? " text-white border-b-2 border-blue-400 " : "text-gray-400 hover:text-white hover:bg-gray-800"}
+                onClick={() => {
+                  setFilter(label);
+                   setActivePanel("testimonials");
+
+                }
+                  
+                }
+                
+                className={`w-full flex items-center gap-2 text-left px-3 py-2 transition text-[15px]
+                  ${
+                    filter === label
+                      ? "text-white border-b-2 border-blue-400"
+                      : "text-gray-400 hover:text-white hover:bg-gray-800"
+                  }
                 `}
               >
-                {item === "All" ? "All Testimonials" : item}
+                <Icon className="w-4 h-4" />
+                {label === "All" ? "All Testimonials" : label}
               </button>
             ))}
 
-          
             <div className="mt-8">
               <button
                 type="button"
@@ -143,10 +165,20 @@ export default function TestimonialsOnly() {
 
               {showIntegrations && (
                 <div className="ml-4 mt-2 flex flex-col gap-2">
-                  <div className="flex items-center gap-2 text-gray-300 px-2 py-1 rounded hover:bg-gray-800 focus:border-b-2 focus:border-blue-500">
-                    Social Media <Twitter className="w-4 h-4" />
-                    <Instagram className="w-4 h-4" />
-                  </div>
+                 <button
+  type="button"
+  onClick={() => setActivePanel("integration")}
+  className={`flex items-center gap-2 text-gray-300 px-2 py-1 rounded hover:bg-gray-800 w-full text-left ${
+    activePanel === "integration" ? "bg-gray-800 border-l-4 border-blue-400" : ""
+  }`}
+>
+  Social Media
+  <Twitter className="w-4 h-4" />
+  <Instagram className="w-4 h-4" />
+</button>
+
+
+
                   <div className="flex items-center gap-2 text-gray-300 px-2 py-1 rounded hover:bg-gray-800">
                     Video <Youtube className="w-4 h-4" />
                   </div>
@@ -156,7 +188,6 @@ export default function TestimonialsOnly() {
           </div>
         </aside>
 
-        {/* Main Section */}
         <div className="flex-1 min-h-[300px] flex items-start justify-center">
           <AnimatePresence mode="wait">
             <motion.div
@@ -167,27 +198,30 @@ export default function TestimonialsOnly() {
               transition={{ duration: 0.4, ease: "easeInOut" }}
               className="w-full flex flex-col gap-4"
             >
-              {filteredTestimonials.length === 0 ? (
-                <div className="flex flex-col items-center gap-4 py-10">
-                  <Inbox className="w-14 h-14 text-gray-500 mb-4" />
-                  <p className="text-lg font-semibold text-center text-2xl text-white">
-                    No testimonials yet
-                  </p>
-                </div>
-              ) : (
-                filteredTestimonials.map((t) => {
-                  const type = t.videoURL ? "video" : "text";
-                  return (
-                    <TestimonialCard
-                      key={t._id}
-                      testimonial={t}
-                      avatar={space.avatar}
-                      spaceId={space._id}
-                      type={type}
-                    />
-                  );
-                })
-              )}
+              {activePanel === "integration" ? (
+  <Integration />
+) : filteredTestimonials.length === 0 ? (
+  <div className="flex flex-col items-center gap-4 py-10">
+    <Inbox className="w-14 h-14 text-gray-500 mb-4" />
+    <p className="text-lg font-semibold text-center text-2xl text-white">
+      No testimonials yet
+    </p>
+  </div>
+) : (
+  filteredTestimonials.map((t) => {
+    const type = t.videoURL ? "video" : "text";
+    return (
+      <TestimonialCard
+        key={t._id}
+        testimonial={t}
+        avatar={space.avatar}
+        spaceId={space._id}
+        type={type}
+      />
+    );
+  })
+)}
+
             </motion.div>
           </AnimatePresence>
         </div>

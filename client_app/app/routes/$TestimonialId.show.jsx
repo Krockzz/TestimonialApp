@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import Lottie from "lottie-react";
 import { FaStar } from "react-icons/fa";
 import Sprinkle from "../../../utilities/Party  Celebration.json";
+import Sprinkle2 from "../../../utilities/Confetti.json"
 
 const API_URI = import.meta.env.VITE_API_URL;
 
@@ -72,7 +73,7 @@ export default function Show() {
     setIsClient(true);
     const timeout = setTimeout(() => {
       setShowSprinkle(false);
-    }, 3000);
+    }, 5000);
 
     return () => clearTimeout(timeout);
   }, []);
@@ -83,10 +84,10 @@ export default function Show() {
       {showSprinkle && isClient && (
         <div className={`fixed inset-0 z-50 ${isVideo ? "bg-black" : "bg-white"} flex items-center justify-center`}>
           <Lottie
-            animationData={Sprinkle}
+            animationData={Sprinkle2}
             loop={false}
             autoplay
-            className="w-[800px] h-[700px]"
+            className="w-[1000px] h-[700px]"
           />
         </div>
       )}
