@@ -3,56 +3,61 @@ import bcrypt from "bcrypt"
 import jwt from "jsonwebtoken"
 
 const UserSchema = new Schema(
-    
-    {
-     Username: {
-            type: String,
-            required: true,
-            index: true,
-            lowercase: true,
-            trim: true
-   },
+  {
+    username: {
+      type: String,
+      required: false,
+      index: true,
+      lowercase: true,
+      trim: true,
+    },
     email: {
-        type: String,
-        required: true,
-        unique: true,
-        lowercase: true,
-        trim: true
-},
+      type: String,
+      required: true,
+      unique: true,
+      lowercase: true,
+      trim: true,
+    },
+    password: {
+      type: String,
+      required: function () {
+        return !this.googleId; 
+      },
+      trim: true,
+    },
 
-   password: {
-    type: String,
-    required: true,
-    trim: true
+    googleId: { // NEW FIELD
+      type: String,
+      unique: true,
+      sparse: true, 
+    },
 
-},
+    avatar: { 
+      type: String,
+    },
 
-   Spaces: {
-    type: Schema.Types.ObjectId,
-    ref: "Spaces",
+    Spaces: {
+      type: Schema.Types.ObjectId,
+      ref: "Spaces",
+    },
 
-},
+    refreshTokens: {
+      type: String,
+    },
 
+    resetToken: {
+      type: String,
+      default: null,
+    },
 
-  refreshTokens: {
-    type: String,
-    // required: true
-},
+    resetTokenExpires: {
+      type: String,
+      default: null,
+    },
+  },
+  { timestamps: true }
+);
 
-resetToken: {
-    type:String,
-    default: null
-},
-
-resetTokenExpires: {
-    type: String,
-    default: null
-
-}
-} , 
-{timestamps: true}
-
-)
 
 
 UserSchema.pre("save" , async function(next){

@@ -1,5 +1,5 @@
-import { Form, useNavigation } from "@remix-run/react";
-import { Link } from "@remix-run/react";
+import { Form, useNavigation, Link } from "@remix-run/react";
+import { FcGoogle } from "react-icons/fc";
 
 export default function LoginForm({ error }) {
   const navigation = useNavigation();
@@ -39,14 +39,13 @@ export default function LoginForm({ error }) {
         </div>
 
         <div className="text-left text-start">
-  <Link
-    to="/forgot-password"
-    className="relative inline-block text-blue-400 hover:text-blue-500 transition-all duration-300 transform hover:-translate-y-0.5 hover:scale-105 after:block after:absolute after:bottom-0 after:left-0 after:w-0 after:h-[2px] after:bg-blue-500 after:transition-all after:duration-300 hover:after:w-full"
-  >
-    Forgot Password?
-  </Link>
-</div>
-
+          <Link
+            to="/forgot-password"
+            className="relative inline-block text-blue-400 hover:text-blue-500 transition-all duration-300 transform hover:-translate-y-0.5 hover:scale-105 after:block after:absolute after:bottom-0 after:left-0 after:w-0 after:h-[2px] after:bg-blue-500 after:transition-all after:duration-300 hover:after:w-full"
+          >
+            Forgot Password?
+          </Link>
+        </div>
 
         <button
           type="submit"
@@ -67,6 +66,22 @@ export default function LoginForm({ error }) {
           )}
         </button>
       </Form>
+
+      {/* Divider */}
+      <div className="flex items-center my-6">
+        <div className="flex-grow h-[1px] bg-gray-700"></div>
+        <span className="mx-4 text-gray-400 text-sm">OR</span>
+        <div className="flex-grow h-[1px] bg-gray-700"></div>
+      </div>
+
+      {/* Continue with Google */}
+      <a
+        href="http://localhost:8000/api/v1/auth/google"
+        className="flex items-center justify-center gap-3 w-full py-2.5 px-4 rounded-xl shadow-md bg-white text-gray-700 font-medium transition-all duration-300 transform hover:scale-105 hover:shadow-xl active:scale-95"
+      >
+        <FcGoogle className="text-xl" />
+        Continue with Google
+      </a>
     </>
   );
 }
