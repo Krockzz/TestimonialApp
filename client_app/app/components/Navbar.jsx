@@ -67,9 +67,16 @@ export default function Navbar({ user }) {
               </Link>
             </>
           ) : (
+            
             <>
               <span className="flex items-center gap-2 bg-white/10 px-3 py-1.5 rounded-full text-sm text-blue-300 font-semibold shadow-sm border border-blue-500/20">
-                👋 Hi, <span className="text-white">{user.Username}</span>
+              {user.avatar? ( <img
+          src={user.avatar}
+          alt={user.Username}
+          className="w-8 h-8 rounded-full"
+        />) : (<>👋 Hi, <span className="text-white">{user.Username}</span> </>)}
+                
+              
               </span>
               <Form method="post" action="/logout" replace>
                 <button

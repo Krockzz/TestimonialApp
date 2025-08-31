@@ -1,4 +1,5 @@
 import { Link, useNavigation } from "@remix-run/react";
+import { FcGoogle } from "react-icons/fc";
 
 export default function AuthForm({ type = "register", error }) {
 
@@ -106,6 +107,21 @@ export default function AuthForm({ type = "register", error }) {
 </Link>
 
         </p>
+
+          <div className="flex items-center my-6">
+        <div className="flex-grow h-[1px] bg-gray-700"></div>
+        <span className="mx-4 text-gray-400 text-sm">OR</span>
+        <div className="flex-grow h-[1px] bg-gray-700"></div>
+      </div>
+
+      
+      <a
+        href="http://localhost:8000/api/v1/auth/google"
+        className="flex items-center justify-center gap-3 w-full py-2.5 px-4 rounded-xl shadow-md bg-white text-gray-700 font-medium transition-all duration-300 transform hover:scale-105 hover:shadow-xl active:scale-95"
+      >
+        <FcGoogle className="text-xl" />
+        Continue with Google
+      </a>
       </div>
     </div>
   );
