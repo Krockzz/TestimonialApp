@@ -39,8 +39,15 @@ export async function loader({ request, params }) {
 
   const spaceData = await res1.json();
   const TestimonialData = await res2.json();
+  console.log(TestimonialData)
 
-  return json({ spaceData, TestimonialData });
+  const docs = TestimonialData.data.docs
+
+  const customerTestimonials = docs.filter(t => t.sourceType !== "twitter")
+  const twitterTestimonials = docs.filter(t=> t.sourceType === "twitter")
+
+
+  return json({ spaceData, customerTestimonials , twitterTestimonials });
 }
 
 export async function action({ request, params }) {
@@ -75,9 +82,9 @@ export async function action({ request, params }) {
 }
 
 export default function TestimonialsOnly() {
-  const { spaceData, TestimonialData } = useLoaderData();
+  const { spaceData, customerTestimonials , twitterTestimonials } = useLoaderData();
   const space = spaceData.data;
-  const testimonials = TestimonialData.data.docs;
+  const testimonials = customerTestimonials
 
   const [filter, setFilter] = useState("All");
   const [showIntegrations, setShowIntegrations] = useState(false);

@@ -39,7 +39,7 @@ router.get(
         sameSite: "lax",
       });
 
-      res.redirect("http://localhost:5173");
+      res.redirect("http://localhost:5173/space");
     } catch (error) {
       console.error("Google login error:", error);
       res.redirect("http://localhost:5173/login?error=true");

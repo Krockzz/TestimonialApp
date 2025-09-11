@@ -26,7 +26,8 @@ export default function Navbar({ user }) {
         </Link>
       ))}
     </>
-  );
+  )
+  
 
   return (
     <nav className="w-full bg-gray-900/90 backdrop-blur-md shadow-xl transition-all duration-300 ease-in-out z-50">
