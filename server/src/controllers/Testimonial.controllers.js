@@ -5,6 +5,8 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
 import mongoose from "mongoose";
+import { extractTweetId } from "../utils/extractTweetId.js";
+import { fetchTweetById } from "../utils/twitterService.js";
 
 
 const getAllTestimonial = asyncHandler(async (req, res) => {
@@ -142,6 +144,56 @@ if (!Newrating || Newrating < 1 || Newrating > 5) {
     message: "Testimonial created successfully",
     testimonial,
   });
+});
+
+const importTweetAsTestimonial = asyncHandler(async (req, res) => {
+  const {spaceId} = req.params;
+  const { tweetUrl } = req.body;
+
+  // Validate inputs
+  if (!tweetUrl || !spaceId) {
+    throw new ApiError(400, "Tweet URL and Space ID are required!");
+  }
+
+  if (!mongoose.Types.ObjectId.isValid(spaceId)) {
+    throw new ApiError(400, "Invalid Space ID");
+  }
+
+  // Ensure the space belongs to the current user
+  const space = await Spaces.findOne({ _id: spaceId, user: req.user?._id });
+  if (!space) {
+    throw new ApiError(403, "You are not authorized to add testimonials to this space.");
+  }
+
+  // Extract Tweet ID
+  const tweetId = extractTweetId(tweetUrl);
+  if (!tweetId) {
+    throw new ApiError(400, "Invalid tweet URL format");
+  }
+
+  // Fetch tweet data from Twitter API
+  const tweetData = await fetchTweetById(tweetId);
+  const tweet = tweetData.data;
+  const user = tweetData.includes.users[0];
+
+  // Save the tweet as a testimonial
+  const testimonial = await Testimonial.create({
+    space: spaceId,
+    text: tweet.text,
+    avatar: user.profile_image_url,
+    sourceType: "twitter",
+    twitterData: {
+      tweetId: tweet.id,
+      twitterHandle: user.username,
+      twitterName: user.name,
+      likeCount: tweet.public_metrics.like_count,
+      originalTweetUrl: `https://twitter.com/${user.username}/status/${tweet.id}`,
+    },
+  });
+
+  return res.status(201).json(
+    new ApiResponse(201, testimonial, "Tweet imported successfully")
+  );
 });
 
 
@@ -398,5 +450,6 @@ updateTestimonial,
 updateVideo,
 getAllTestimonial,
 likecontroller,
-getTestimonialById
+getTestimonialById,
+importTweetAsTestimonial
 }
