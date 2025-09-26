@@ -14,7 +14,7 @@ router.get(
 router.get(
   "/google/callback",
   passport.authenticate("google", {
-    failureRedirect: "http://localhost:5173/login",
+    failureRedirect: "https://testimonia-delta.vercel.app/login",
     session: false,
   }),
   async (req, res) => {
@@ -39,10 +39,10 @@ router.get(
         sameSite: "lax",
       });
 
-      res.redirect("http://localhost:5173/space");
+      res.redirect("/space");
     } catch (error) {
       console.error("Google login error:", error);
-      res.redirect("http://localhost:5173/login?error=true");
+      res.redirect("https://testimonia-delta.vercel.app/login?error=true");
     }
   }
 );
