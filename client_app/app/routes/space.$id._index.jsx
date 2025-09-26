@@ -1,5 +1,6 @@
 import { json, useLoaderData, redirect } from "@remix-run/react";
 import { requireUser } from "../../../utilities/requireUser";
+// import IntegrationCard from "../components/IntegrationCard.jsx"
 
 import {
   Pencil,
@@ -39,12 +40,14 @@ export async function loader({ request, params }) {
 
   const spaceData = await res1.json();
   const TestimonialData = await res2.json();
-  console.log(TestimonialData)
+  // console.log(TestimonialData)
 
   const docs = TestimonialData.data.docs
 
   const customerTestimonials = docs.filter(t => t.sourceType !== "twitter")
   const twitterTestimonials = docs.filter(t=> t.sourceType === "twitter")
+
+  console.log(twitterTestimonials)
 
 
   return json({ spaceData, customerTestimonials , twitterTestimonials });
@@ -54,18 +57,51 @@ export async function action({ request, params }) {
   const cookieHeader = request.headers.get("Cookie");
   const data = await request.formData();
   const spaceId = params.id;
-  const TestiId = data.get("testimonialId");
 
-  if (!TestiId) {
-    return json({ message: "No testimonial ID provided", status: 400 });
+  const intent = data.get("intent");
+
+  
+  if (intent === "importTweet") {
+    const tweetUrl = data.get("tweetUrl");
+    
+
+    try {
+      const res = await fetch(`${API_URI}/api/v1/users/Testimonial/import-twitter/${spaceId}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Cookie: cookieHeader,
+        },
+        body: JSON.stringify({ tweetUrl, spaceId }),
+      });
+
+      const result = await res.json();
+
+      if (!res.ok) {
+        return json({ message: result.message || "Failed to import tweet", status: res.status });
+      }
+
+      return redirect(`/space/${spaceId}`);
+    } catch (error) {
+      console.error("Error importing tweet:", error);
+      return json({ message: "Internal server error", status: 500 });
+    }
   }
 
-  try {
+  else {
+  
+  
+    const TestiId = data.get("testimonialId");
+
+    if (!TestiId) {
+      return json({ message: "No testimonial ID provided", status: 400 });
+    }
+
     const res = await fetch(`${API_URI}/api/v1/users/Testimonial/delete/${TestiId}`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Cookie": cookieHeader,
+        Cookie: cookieHeader,
       },
       body: JSON.stringify({ TestiId, spaceId }),
     });
@@ -75,16 +111,18 @@ export async function action({ request, params }) {
     }
 
     return redirect(`/space/${spaceId}`);
-  } catch (err) {
-    console.error("Error deleting testimonial:", err);
-    return json({ message: "Internal server error", status: 500 });
+  
   }
+
+  return json({ message: "Unknown action", status: 400 });
 }
+
 
 export default function TestimonialsOnly() {
   const { spaceData, customerTestimonials , twitterTestimonials } = useLoaderData();
   const space = spaceData.data;
   const testimonials = customerTestimonials
+  const TweetTestimonials = twitterTestimonials
 
   const [filter, setFilter] = useState("All");
   const [showIntegrations, setShowIntegrations] = useState(false);
@@ -206,7 +244,10 @@ export default function TestimonialsOnly() {
               className="w-full flex flex-col gap-4"
             >
               {activePanel === "integration" ? (
-  <Integration />
+                <>
+      <Integration twitterTestimonials={TweetTestimonials}  spaceId = {space._id} />
+  {/* <IntegrationCard twitter={TweetTestimonials} /> */}
+</>
 ) : filteredTestimonials.length === 0 ? (
   <div className="flex flex-col items-center gap-4 py-10">
     <Inbox className="w-14 h-14 text-gray-500 mb-4" />

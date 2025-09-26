@@ -35,9 +35,18 @@ export default function EmbedTestimonialModal({ testimonial, avatar, onClose }) 
   const [cardColor, setCardColor] = useState("#ffffff");
   const [designStyle, setDesignStyle] = useState("left");
 
-  
+  const isVideo = Boolean(testimonial.videoURL);
 
-  const iframeCode = useMemo(() => {
+
+ const [width, setWidth] = useState(600);
+  const [height, setHeight] = useState(350);
+
+const iframeCode = useMemo(() => {
+  if (isVideo) {
+    
+    return `<iframe src="${window.location.origin}/${testimonial._id}/embedVideo" width="${width}" height="${height}" style="border:none;" loading="lazy"></iframe>`;
+  } else {
+   
     const queryParams = new URLSearchParams({
       borderColor,
       borderWidth: borderWidth.toString(),
@@ -47,16 +56,30 @@ export default function EmbedTestimonialModal({ testimonial, avatar, onClose }) 
       designStyle,
       cardColor,
       backgroundColor,
-      // avatar: encodeURIComponent(testimonial.avatar || avatar || "")
+     
     }).toString();
 
     const id = testimonial._id;
     const publicLink = `${window.location.origin}/${id}/embed`;
 
     return `<iframe src="${publicLink}?${queryParams}" width="600" height="350" style="border:none;" loading="lazy"></iframe>`;
-  },[testimonial._id, borderColor, borderWidth, borderRadius, textColor, fontFamily]);
+  }
+}, [
+  isVideo,
+  testimonial.videoURL,
+  width,
+  height,
+  testimonial._id,
+  borderColor,
+  borderWidth,
+  borderRadius,
+  textColor,
+  fontFamily,
+  designStyle,
+  cardColor,
+  backgroundColor
+]);
 
-  const isVideo = Boolean(testimonial.videoURL);
 
   const options = [
     { name: "design", label: "Design", icon: <Palette className="w-6 h-6" /> },
@@ -68,8 +91,9 @@ export default function EmbedTestimonialModal({ testimonial, avatar, onClose }) 
   
 
   return (
+    <>
 
-    !isVideo && ( <div className="fixed inset-0 z-[9999] bg-black/40  flex items-center justify-center px-4 pointer-events-none">
+     { !isVideo ?  ( <div className="fixed inset-0 z-[9999] bg-black/40  flex items-center justify-center px-4 pointer-events-none">
       <div className="bg-white text-black rounded-2xl p-8 w-full max-w-4xl h-[90vh] overflow-y-auto relative shadow-2xl pointer-events-auto">
         <button
           onClick={onClose}
@@ -422,7 +446,84 @@ export default function EmbedTestimonialModal({ testimonial, avatar, onClose }) 
 
 
       </div>
-    </div>)
-   
-  );
+    </div> ) : 
+
+   (
+  <div className="fixed inset-0 z-[9999] bg-black/50 flex items-center justify-center px-4">
+    <div className="bg-white rounded-2xl p-6 w-full max-w-xl relative shadow-2xl flex flex-col">
+      
+      {/* Close Button */}
+      <button
+        onClick={onClose}
+        className="absolute top-4 right-4 text-gray-500 hover:text-black text-2xl"
+      >
+        &times;
+      </button>
+
+      {/* Title */}
+      <h2 className="text-lg font-semibold mb-4 text-gray-900">
+        Embed this testimonial to your website
+      </h2>
+
+      {/* Width/Height Inputs */}
+      <div className="flex gap-6 mb-4">
+        <div className="flex flex-col">
+          <label className="text-sm font-medium text-gray-700 mb-1">Width</label>
+          <input
+            type="number"
+            value={width}
+            onChange={(e) => setWidth(Number(e.target.value))}
+            className="border rounded-md p-2 w-28 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            min={100}
+          />
+        </div>
+
+        <div className="flex flex-col">
+          <label className="text-sm font-medium text-gray-700 mb-1">Height</label>
+          <input
+            type="number"
+            value={height}
+            onChange={(e) => setHeight(Number(e.target.value))}
+            className="border rounded-md p-2 w-28 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            min={100}
+          />
+        </div>
+      </div>
+
+      {/* Iframe Preview (dark code block) */}
+      <div className="bg-gray-900 text-green-400 rounded-md p-3 overflow-x-auto text-sm font-mono mb-6">
+        <code>{iframeCode}</code>
+      </div>
+
+      {/* Action Buttons */}
+      <div className="flex justify-end gap-4">
+        <button
+          className="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-md shadow-sm"
+          onClick={onClose}
+        >
+          Close
+        </button>
+
+        <button
+          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md shadow-md"
+          onClick={() => {
+            navigator.clipboard.writeText(iframeCode);
+            toast.success("Embed code copied!");
+          }}
+        >
+          Copy code
+        </button>
+      </div>
+    </div>
+  </div>
+)
+
+    }
+
+  
+  </>
+  ); 
+
+
 }
+

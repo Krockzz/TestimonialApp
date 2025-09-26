@@ -5,7 +5,7 @@ import passport from "passport";
 import session from "express-session"
 import "./auth/passport.js"
 
-// Creating an instance of app
+// Creating an instance of express server
 const app = express();
 
 app.use(cors({
