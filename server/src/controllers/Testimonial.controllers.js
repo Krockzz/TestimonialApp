@@ -147,6 +147,8 @@ if (!Newrating || Newrating < 1 || Newrating > 5) {
 });
 
 const importTweetAsTestimonial = asyncHandler(async (req, res) => {
+
+  await new Promise((resolve) => setTimeout(resolve , 10000))
   const {spaceId} = req.params;
   const { tweetUrl } = req.body;
 

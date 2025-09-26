@@ -4,13 +4,14 @@ import jwt from "jsonwebtoken"
 
 const UserSchema = new Schema(
   {
-    username: {
-      type: String,
-      required: false,
-      index: true,
-      lowercase: true,
-      trim: true,
-    },
+  Username: {
+  type: String,
+  trim: true,
+  lowercase: true,
+  index: true,
+  required: true
+},
+
     email: {
       type: String,
       required: true,
