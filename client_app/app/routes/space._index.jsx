@@ -10,14 +10,14 @@ const API_URL = import.meta.env.VITE_API_URL;
 export const accessTokenCookie = createCookie("accessToken", {
   httpOnly: true,
   secure: true,
-  sameSite: "lax",
+  sameSite: "none",
   maxAge: 60 * 60 * 24, // 1 day
 });
 
 export const refreshTokenCookie = createCookie("refreshTokens", {
   httpOnly: true,
   secure: true,
-  sameSite: "lax",
+  sameSite: "none",
   maxAge: 60 * 60 * 24, // 1 day
 });
 
@@ -26,17 +26,17 @@ export async function loader({ request }) {
   const accessToken = url.searchParams.get("accessToken");
   const refreshToken = url.searchParams.get("refreshTokens");
 
-  // 2️⃣ If tokens exist in URL → set cookies and redirect
+ 
   if (accessToken && refreshToken) {
     const headers = new Headers();
     headers.append("Set-Cookie", await accessTokenCookie.serialize(accessToken));
     headers.append("Set-Cookie", await refreshTokenCookie.serialize(refreshToken));
 
-    // Redirect to /space without query params
+    
     return redirect("/space", { headers });
   }
 
-  // 3️⃣ Otherwise, fetch spaces using existing cookies
+ 
   const cookieHeader = request.headers.get("Cookie");
 
   const response = await fetch(`${API_URL}/api/v1/users/spaces/getSpaces`, {
@@ -47,10 +47,11 @@ export async function loader({ request }) {
     },
     credentials: "include",
   });
-
+/*
   if ([401, 403].includes(response.status)) {
     return redirect("/login");
   }
+    */
 
   if (!response.ok) {
     return json({ error: "Failed to fetch spaces" }, { status: 500 });
