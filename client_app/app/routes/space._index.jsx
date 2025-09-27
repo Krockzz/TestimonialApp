@@ -6,53 +6,58 @@ import { createCookie } from "@remix-run/node";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
+// ---------------------------
 // 1️⃣ Create cookies for access and refresh tokens
+// ---------------------------
 export const accessTokenCookie = createCookie("accessToken", {
   httpOnly: true,
   secure: true,
-  sameSite: "none",
-  maxAge: 60 * 60 * 24, // 1 day
+  sameSite: "none", // cross-domain
+  maxAge: 60 * 60 * 24,
 });
 
 export const refreshTokenCookie = createCookie("refreshTokens", {
   httpOnly: true,
   secure: true,
   sameSite: "none",
-  maxAge: 60 * 60 * 24, // 1 day
+  maxAge: 60 * 60 * 24,
 });
 
+// ---------------------------
+// 2️⃣ Loader
+// ---------------------------
 export async function loader({ request }) {
   const url = new URL(request.url);
   const accessToken = url.searchParams.get("accessToken");
-  const refreshTokens = url.searchParams.get("refreshTokens");
+  const refreshToken = url.searchParams.get("refreshTokens");
 
- 
-  if (accessToken && refreshTokens) {
+  // If user comes from OAuth redirect → set cookies and redirect
+  if (accessToken && refreshToken) {
     const headers = new Headers();
     headers.append("Set-Cookie", await accessTokenCookie.serialize(accessToken));
-    headers.append("Set-Cookie", await refreshTokenCookie.serialize(refreshTokens));
+    headers.append("Set-Cookie", await refreshTokenCookie.serialize(refreshToken));
 
-    
     return redirect("/space", { headers });
   }
 
- 
-  const cookieHeader = request.headers.get("Cookie");
+  // Fetch spaces using cookies
+  const cookieHeader = request.headers.get("Cookie") || "";
 
   const response = await fetch(`${API_URL}/api/v1/users/spaces/getSpaces`, {
     method: "GET",
     headers: {
       "Content-Type": "application/json",
-      Cookie: cookieHeader,
+      Cookie: cookieHeader, // forward cookies to backend
     },
     credentials: "include",
   });
 
+  // Not authenticated → redirect to login
   if ([401, 403].includes(response.status)) {
     return redirect("/login");
   }
-    
 
+  // Backend error
   if (!response.ok) {
     return json({ error: "Failed to fetch spaces" }, { status: 500 });
   }
@@ -61,6 +66,9 @@ export async function loader({ request }) {
   return json({ spaces: result.data.docs });
 }
 
+// ---------------------------
+// 3️⃣ Component
+// ---------------------------
 export default function Spaces() {
   const loaderData = useLoaderData();
   const spaces = loaderData?.spaces || [];
