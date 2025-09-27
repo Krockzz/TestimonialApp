@@ -19,7 +19,7 @@ router.route("/create-space").post(
 router.route("/delete-space").post(verifyJwt , deleteSpace)
 
 router.route("/update-space").patch(verifyJwt , updateSpace)
-router.route("/getSpace/:SpaceId").get(verifyJwt ,getSpaceById )
+router.route("/getSpace/:SpaceId").get( getSpaceById )
 router.route("/update-avatar").patch(verifyJwt , upload.single("avatar") , updateAvatar)
 router.route("/getSpaces").get(verifyJwt , getAllSpaces)
 
