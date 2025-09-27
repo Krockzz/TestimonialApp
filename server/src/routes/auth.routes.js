@@ -13,7 +13,7 @@ router.get(
 router.get(
   "/google/callback",
   passport.authenticate("google", {
-    failureRedirect: "https://testimonia-delta.vercel.app/login",
+    failureRedirect: "https://testimonia-delta.vercel.app/space",
     session: false,
   }),
   async (req, res) => {
