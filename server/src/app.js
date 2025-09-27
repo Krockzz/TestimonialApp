@@ -26,7 +26,7 @@ app.use(cookieParser());
 
 app.use(
   session({
-    secret: process.env.SESSION_SECRET || "supersecretkey",
+    secret: "supersecretkey",
     resave: false,
     saveUninitialized: false,
     cookie: {
@@ -51,9 +51,6 @@ app.set("trust proxy", 1);
 
 app.use(express.static("public"))
 
-
-export  {app}
-
 import router1 from "../src/routes/User.routes.js"
 import router2 from "../src/routes/Space.routes.js"
 import router3 from "../src/routes/Testimonial.routes.js"
@@ -66,3 +63,7 @@ app.use("/api/v1/users/spaces" , router2)
 app.use("/api/v1/users/Testimonial" , router3)
 app.use("/api/v1/users/comments" , router4)
 app.use("/api/v1/auth" , router5)
+
+
+export  {app}
+
