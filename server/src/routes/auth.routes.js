@@ -30,13 +30,13 @@ router.get(
       res.cookie("accessToken", accessToken, {
         httpOnly: true,
         secure: true, // set true in production (HTTPS)
-        sameSite: "lax",
+        sameSite: "none",
       });
 
-      res.cookie("refreshToken", refreshToken, {
+      res.cookie("refreshTokens", refreshToken, {
         httpOnly: true,
         secure: true,
-        sameSite: "lax",
+        sameSite: "none",
       });
 
       res.redirect("https://testimonia-delta.vercel.app/space");
