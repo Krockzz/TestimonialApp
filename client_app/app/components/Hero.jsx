@@ -7,7 +7,7 @@ import { Sparkles } from "lucide-react";
 import ShowcaseEmbed from "./EmbedPreview";
 
 export default function Hero({ isAuthenticated }) {
-  const targetRoute = isAuthenticated ? "/space" : "/login";
+  const targetRoute = isAuthenticated ? "/space" : "/space";
 
   useEffect(() => {
     AOS.init({ duration: 1000, once: true });
