@@ -33,7 +33,7 @@ export async function loader({ request }) {
     headers.append("Set-Cookie", await refreshTokenCookie.serialize(refreshTokens));
 
     // Redirect to /space without query params
-    // return redirect("/space", { headers });
+    return redirect("/space", { headers });
   }
 
  
@@ -48,7 +48,7 @@ export async function loader({ request }) {
     credentials: "include",
   });
 
-  if ([401, 403].includes(response.status)) {
+  if ([400 , 401, 403].includes(response.status)) {
     return redirect("/login");
   }
 
