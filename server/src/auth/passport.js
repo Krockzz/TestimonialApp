@@ -20,15 +20,7 @@ const downloadAndUploadGoogleAvatar = async (url) => {
 };
 
 // Token generator helper
-const generateTokensForUser = async (user) => {
-  const accessToken = user.GenerateAccessTokens();
-  const refreshTokens = user.GenerateRefreshTokens();
 
-  user.refreshTokens = refreshTokens;
-  await user.save({ validateBeforeSave: false });
-
-  return { accessToken, refreshTokens };
-};
 
 passport.use(
   new GoogleStrategy(
@@ -58,10 +50,8 @@ passport.use(
           await user.save();
         }
 
-        // Generate tokens like normal login
-        const tokens = await generateTokensForUser(user);
-        user.accessToken = tokens.accessToken;
-        user.refreshTokens = tokens.refreshTokens;
+      
+   
 
         return done(null, user);
       } catch (err) {
