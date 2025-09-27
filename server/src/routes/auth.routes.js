@@ -18,6 +18,7 @@ router.get(
     session: false,
   }),
   asyncHandler(async (req, res) => {
+    console.log(`This is the user: ${req.user}`)
     if (!req.user) {
       return res.redirect("https://testimonia-delta.vercel.app/login?error=true");
     }
@@ -29,7 +30,7 @@ router.get(
     // ✅ Secure cookie settings for cross-domain
     const cookieOptions = {
       httpOnly: true,
-      secure: true,       // Required on HTTPS
+      secure: false,       // Required on HTTPS
       sameSite: "none",   // Required for cross-site OAuth
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     };
