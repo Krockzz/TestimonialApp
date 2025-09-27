@@ -1,25 +1,8 @@
 import { Router } from "express";
 import passport from "passport";
-import { User } from "../models/User.models.js";
-import { ApiError } from "../utils/ApiError.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 
 const router = Router();
-
-// Helper to generate tokens
-const GenerateAccessandRefreshToken = async (user) => {
-  try {
-    const accessToken = user.GenerateAccessTokens();
-    const refreshTokens = user.GenerateRefreshTokens();
-
-    user.refreshTokens = refreshTokens;
-    await user.save({ validateBeforeSave: false });
-
-    return { accessToken, refreshTokens };
-  } catch (error) {
-    throw new ApiError(400, "Something went wrong while generating tokens!");
-  }
-};
 
 // Step 1: Start Google Login
 router.get(
@@ -39,8 +22,9 @@ router.get(
       return res.redirect("https://testimonia-delta.vercel.app/login?error=true");
     }
 
-    // Generate access and refresh tokens
-    const { accessToken, refreshTokens } = await GenerateAccessandRefreshToken(req.user);
+    // Tokens are already generated in passport.js and attached to user
+    const accessToken = req.user.accessToken;
+    const refreshTokens = req.user.refreshToken;
 
     // ✅ Secure cookie settings for cross-domain
     const cookieOptions = {
@@ -67,7 +51,7 @@ router.get("/logout", asyncHandler(async (req, res) => {
   }
 
   res.clearCookie("accessToken");
-  res.clearCookie("refreshToken");
+  res.clearCookie("refreshTokens");
 
   return res.status(200).json({ message: "Logged out successfully" });
 }));
