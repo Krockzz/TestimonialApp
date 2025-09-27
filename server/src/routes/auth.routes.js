@@ -1,6 +1,6 @@
+// routes/auth.routes.js
 import { Router } from "express";
 import passport from "passport";
-import { asyncHandler } from "../utils/asyncHandler.js";
 
 const router = Router();
 
@@ -17,44 +17,53 @@ router.get(
     failureRedirect: "https://testimonia-delta.vercel.app/login",
     session: false,
   }),
-  asyncHandler(async (req, res) => {
-    console.log(`This is the user: ${req.user}`)
-    if (!req.user) {
-      return res.redirect("https://testimonia-delta.vercel.app/login?error=true");
+  async (req, res) => {
+    try {
+      const accessToken = req.user.GenerateAccessTokens();
+      const refreshToken = req.user.GenerateRefreshTokens();
+
+      // Save refresh token in DB
+      req.user.refreshTokens = refreshToken;
+      await req.user.save();
+
+      // Send as cookies
+      res.cookie("accessToken", accessToken, {
+        httpOnly: true,
+        secure: false, // set true in production (HTTPS)
+        sameSite: "lax",
+      });
+
+      res.cookie("refreshToken", refreshToken, {
+        httpOnly: true,
+        secure: false,
+        sameSite: "lax",
+      });
+
+      res.redirect("https://testimonia-delta.vercel.app/space");
+    } catch (error) {
+      console.error("Google login error:", error);
+      res.redirect("http://localhost:5173/login?error=true");
     }
-
-    // Tokens are already generated in passport.js and attached to user
-    const accessToken = req.user.accessToken;
-    const refreshTokens = req.user.refreshToken;
-
-    // ✅ Secure cookie settings for cross-domain
-    const cookieOptions = {
-      httpOnly: true,
-      secure: false,       // Required on HTTPS
-      sameSite: "none",   // Required for cross-site OAuth
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-    };
-
-    // Set cookies
-    res.cookie("accessToken", accessToken, cookieOptions);
-    res.cookie("refreshTokens", refreshTokens, cookieOptions);
-
-    // Redirect to frontend dashboard
-    return res.redirect("https://testimonia-delta.vercel.app/space");
-  })
+  }
 );
 
-// Logout Route
-router.get("/logout", asyncHandler(async (req, res) => {
-  if (req.user) {
-    req.user.refreshTokens = null;
-    await req.user.save();
+// Step 3: Google Logout
+router.get("/logout", async (req, res) => {
+  try {
+    if (req.user) {
+      req.user.refreshTokens = null; // clear stored refresh token
+      await req.user.save();
+    }
+
+    // Clear cookies
+    res.clearCookie("accessToken");
+    res.clearCookie("refreshToken");
+
+    res.status(200).json({ message: "Logged out successfully" });
+  } catch (error) {
+    console.error("Logout error:", error);
+    res.status(500).json({ message: "Logout failed" });
   }
-
-  res.clearCookie("accessToken");
-  res.clearCookie("refreshTokens");
-
-  return res.status(200).json({ message: "Logged out successfully" });
-}));
+});
 
 export default router;
