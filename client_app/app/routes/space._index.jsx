@@ -1,15 +1,19 @@
-import { json, redirect } from "@remix-run/node";
 import { useLoaderData } from "@remix-run/react";
+import { useEffect, useState } from "react";
+import { json, redirect } from "@remix-run/node";
 import SpacesList from "../components/SpaceList";
 import { FaLayerGroup } from "react-icons/fa";
 import { createCookie } from "@remix-run/node";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
+// ---------------------------
+// 1️⃣ Create cookies for access and refresh tokens
+// ---------------------------
 export const accessTokenCookie = createCookie("accessToken", {
   httpOnly: true,
   secure: true,
-  sameSite: "none", // cross-domain
+  sameSite: "none",
   maxAge: 60 * 60 * 24,
 });
 
@@ -20,45 +24,25 @@ export const refreshTokenCookie = createCookie("refreshTokens", {
   maxAge: 60 * 60 * 24,
 });
 
-
+// ---------------------------
+// 2️⃣ Loader
+// ---------------------------
 export async function loader({ request }) {
   const url = new URL(request.url);
   const accessToken = url.searchParams.get("accessToken");
-  const refreshTokens = url.searchParams.get("refreshTokens");
+  const refreshToken = url.searchParams.get("refreshTokens");
 
-  // If user comes from OAuth redirect → set cookies and redirect
-  if (accessToken && refreshTokens) {
+  // If user comes from OAuth redirect → set cookies and return minimal data
+  if (accessToken && refreshToken) {
     const headers = new Headers();
     headers.append("Set-Cookie", await accessTokenCookie.serialize(accessToken));
-    headers.append("Set-Cookie", await refreshTokenCookie.serialize(refreshTokens));
+    headers.append("Set-Cookie", await refreshTokenCookie.serialize(refreshToken));
 
-    return redirect("/space", { headers });
+    return json({ oauthRedirect: true }, { headers });
   }
 
-  // Fetch spaces using cookies
-  const cookieHeader = request.headers.get("Cookie") || "";
-
-  const response = await fetch(`${API_URL}/api/v1/users/spaces/getSpaces`, {
-    method: "GET",
-    headers: {
-      "Content-Type": "application/json",
-      Cookie: cookieHeader, // forward cookies to backend
-    },
-    credentials: "include",
-  });
-
-  // Not authenticated → redirect to login
-  if ([401, 403].includes(response.status)) {
-    return redirect("/login");
-  }
-
-  // Backend error
-  if (!response.ok) {
-    return json({ error: "Failed to fetch spaces" }, { status: 500 });
-  }
-
-  const result = await response.json();
-  return json({ spaces: result.data.docs });
+  // If no OAuth tokens, just return minimal data
+  return json({ oauthRedirect: false });
 }
 
 // ---------------------------
@@ -66,11 +50,36 @@ export async function loader({ request }) {
 // ---------------------------
 export default function Spaces() {
   const loaderData = useLoaderData();
-  const spaces = loaderData?.spaces || [];
+  const [spaces, setSpaces] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
-  if (loaderData.error) {
-    return <div className="text-red-500 p-4">Error: {loaderData.error}</div>;
-  }
+  useEffect(() => {
+    async function fetchSpaces() {
+      try {
+        const res = await fetch(`${API_URL}/api/v1/users/spaces/getSpaces`, {
+          credentials: "include", // send cookies
+        });
+
+        if (!res.ok) {
+          if ([401, 403].includes(res.status)) {
+            window.location.href = "/login"; // redirect if unauthorized
+          }
+          throw new Error("Failed to fetch spaces");
+        }
+
+        const data = await res.json();
+        setSpaces(data.data.docs || []);
+      } catch (err) {
+        console.error(err);
+        setError(err.message || "Something went wrong");
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchSpaces();
+  }, []);
 
   return (
     <div className="p-6 md:p-10 bg-gradient-to-br from-black via-gray-900 to-black min-h-screen space-y-14">
@@ -101,7 +110,13 @@ export default function Spaces() {
       <div className="border-t border-white/10" />
 
       {/* Spaces List Section */}
-      <SpacesList spaces={spaces} />
+      {loading ? (
+        <div className="text-white">Loading spaces...</div>
+      ) : error ? (
+        <div className="text-red-500">{error}</div>
+      ) : (
+        <SpacesList spaces={spaces} />
+      )}
     </div>
   );
 }
