@@ -22,12 +22,12 @@ const downloadAndUploadGoogleAvatar = async (url) => {
 // Token generator helper
 const generateTokensForUser = async (user) => {
   const accessToken = user.GenerateAccessTokens();
-  const refreshToken = user.GenerateRefreshTokens();
+  const refreshTokens = user.GenerateRefreshTokens();
 
-  user.refreshTokens = refreshToken;
+  user.refreshTokens = refreshTokens;
   await user.save({ validateBeforeSave: false });
 
-  return { accessToken, refreshToken };
+  return { accessToken, refreshTokens };
 };
 
 passport.use(
@@ -61,11 +61,11 @@ passport.use(
         // Generate tokens like normal login
         const tokens = await generateTokensForUser(user);
         user.accessToken = tokens.accessToken;
-        user.refreshToken = tokens.refreshToken;
+        user.refreshTokens = tokens.refreshTokens;
 
         return done(null, user);
       } catch (err) {
-        console.error("Google OAuth Error:", err);
+        console.log("Google OAuth Error:", err);
         return done(err, null);
       }
     }
