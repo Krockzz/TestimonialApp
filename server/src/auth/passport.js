@@ -1,23 +1,33 @@
 import passport from "passport";
 import { Strategy as GoogleStrategy } from "passport-google-oauth20";
 import { User } from "../models/User.models.js";
-import { uploadOnCloudinary } from "../utils/cloudinary.js"; // updated function
-import fetch from "node-fetch"; // make sure node-fetch is installed
+import { uploadOnCloudinary } from "../utils/cloudinary.js";
+import fetch from "node-fetch";
 
-// Upload Google avatar directly from buffer
+// Utility to download Google avatar and upload to Cloudinary
 const downloadAndUploadGoogleAvatar = async (url) => {
   try {
     const response = await fetch(url);
     const arrayBuffer = await response.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
-    // Upload buffer directly to Cloudinary
     const uploadResult = await uploadOnCloudinary(buffer, `google-avatar-${Date.now()}`);
     return uploadResult?.secure_url || null;
   } catch (err) {
     console.error("Error downloading/uploading Google avatar:", err);
     return null;
   }
+};
+
+// Token generator helper
+const generateTokensForUser = async (user) => {
+  const accessToken = user.GenerateAccessTokens();
+  const refreshToken = user.GenerateRefreshTokens();
+
+  user.refreshTokens = refreshToken;
+  await user.save({ validateBeforeSave: false });
+
+  return { accessToken, refreshToken };
 };
 
 passport.use(
@@ -31,9 +41,6 @@ passport.use(
       try {
         let user = await User.findOne({ googleId: profile.id });
         let cloudinaryAvatar = null;
-
-        console.log(user)
-        console.log(profile)
 
         if (profile.photos[0]?.value) {
           cloudinaryAvatar = await downloadAndUploadGoogleAvatar(profile.photos[0].value);
@@ -51,6 +58,11 @@ passport.use(
           await user.save();
         }
 
+        // Generate tokens like normal login
+        const tokens = await generateTokensForUser(user);
+        user.accessToken = tokens.accessToken;
+        user.refreshToken = tokens.refreshToken;
+
         return done(null, user);
       } catch (err) {
         console.error("Google OAuth Error:", err);
@@ -61,7 +73,6 @@ passport.use(
 );
 
 passport.serializeUser((user, done) => done(null, user.id));
-
 passport.deserializeUser(async (id, done) => {
   try {
     const user = await User.findById(id);
