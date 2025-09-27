@@ -144,7 +144,7 @@ const createSpace = asyncHandler(async (req, res) => {
   return res.status(200).json(new ApiResponse(200, space, "Space created successfully"));
 });
 
-export { createSpace };
+
 
 const getSpaceById = asyncHandler(async(req, res) => {
     const{SpaceId} = req.params;
@@ -305,7 +305,7 @@ const updateAvatar = asyncHandler(async (req, res) => {
   );
 });
 
-export { updateAvatar };
+
 
 
 export{
