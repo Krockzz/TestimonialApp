@@ -6,9 +6,6 @@ import { createCookie } from "@remix-run/node";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
-// ---------------------------
-// 1️⃣ Create cookies for access and refresh tokens
-// ---------------------------
 export const accessTokenCookie = createCookie("accessToken", {
   httpOnly: true,
   secure: true,
@@ -23,19 +20,17 @@ export const refreshTokenCookie = createCookie("refreshTokens", {
   maxAge: 60 * 60 * 24,
 });
 
-// ---------------------------
-// 2️⃣ Loader
-// ---------------------------
+
 export async function loader({ request }) {
   const url = new URL(request.url);
   const accessToken = url.searchParams.get("accessToken");
-  const refreshToken = url.searchParams.get("refreshTokens");
+  const refreshTokens = url.searchParams.get("refreshTokens");
 
   // If user comes from OAuth redirect → set cookies and redirect
-  if (accessToken && refreshToken) {
+  if (accessToken && refreshTokens) {
     const headers = new Headers();
     headers.append("Set-Cookie", await accessTokenCookie.serialize(accessToken));
-    headers.append("Set-Cookie", await refreshTokenCookie.serialize(refreshToken));
+    headers.append("Set-Cookie", await refreshTokenCookie.serialize(refreshTokens));
 
     return redirect("/space", { headers });
   }
