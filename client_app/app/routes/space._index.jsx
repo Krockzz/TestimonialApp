@@ -47,11 +47,11 @@ export async function loader({ request }) {
     },
     credentials: "include",
   });
-/*
+
   if ([401, 403].includes(response.status)) {
     return redirect("/login");
   }
-    */
+    
 
   if (!response.ok) {
     return json({ error: "Failed to fetch spaces" }, { status: 500 });
