@@ -39,7 +39,7 @@ router.get(
         sameSite: "lax",
       });
 
-      res.redirect("/space");
+      res.redirect("https://testimonia-delta.vercel.app/space");
     } catch (error) {
       console.error("Google login error:", error);
       res.redirect("https://testimonia-delta.vercel.app/login?error=true");

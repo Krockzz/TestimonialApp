@@ -5,6 +5,7 @@ import { FaLayerGroup } from "react-icons/fa"; // ← Icon import
 import { CiEdit } from "react-icons/ci";
 
 const API_URL = import.meta.env.VITE_API_URL;
+console.log(API_URL)
 
 export async function loader({ request }) {
   const cookie = request.headers.get("Cookie");
