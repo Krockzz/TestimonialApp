@@ -4,20 +4,7 @@ import LoginForm from "../components/LoginForm.jsx";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
-export async function loader({request}){
 
-  const url = new URL(request.url);
-  const accessToken = url.searchParams.get("accessToken");
-  const refreshToken = url.searchParams.get("refreshTokens");
-
- 
-  if (accessToken && refreshToken) {
-    return { accessToken, refreshToken };
-  }
-
-
-  return redirect("/login");
-}
 
 
 export async function action({ request }) {
