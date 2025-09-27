@@ -102,77 +102,49 @@ const getAllSpaces = asyncHandler(async(req, res) => {
 });
 
 
-const createSpace = asyncHandler(async(req , res) => {
-    await new Promise((resolve) => setTimeout(resolve , 5000));
+const createSpace = asyncHandler(async (req, res) => {
+  await new Promise((resolve) => setTimeout(resolve, 5000));
 
-    const{name , HeaderTitle, customMessage, description} = req.body;
+  const { name, HeaderTitle, customMessage, description } = req.body;
 
-    if(
-     
-        [name, HeaderTitle, customMessage, description].some((field) => field?.trim() == " ")
-    )
-    {
-        throw new ApiError(
-            400,
-            "All the fields are required!"
-        )
-    }
+  if ([name, HeaderTitle, customMessage, description].some((field) => !field?.trim())) {
+    throw new ApiError(400, "All the fields are required!");
+  }
 
-    const user = req.user?._id;
-    if(!user){
-        throw new ApiError(
-            400,
-            "Login is required to create any space"
-        )
-    }
+  const user = req.user?._id;
+  if (!user) {
+    throw new ApiError(400, "Login is required to create any space");
+  }
 
-    const avatarlocalPath = req.files?.avatar[0]?.path
-    console.log(req.files)
-    if(!avatarlocalPath){
-        throw new ApiError(
-            400 ,
-            " Avatar is missing"
-        )
+  // Ensure avatar file exists
+  const avatarFile = req.files?.avatar?.[0];
+  if (!avatarFile) {
+    throw new ApiError(400, "Avatar is missing");
+  }
 
-    }
-    console.log(avatarlocalPath);
+  // Upload avatar buffer to Cloudinary
+  const avatarResult = await uploadOnCloudinary(avatarFile.buffer, `space-avatar-${Date.now()}`);
+  if (!avatarResult?.secure_url) {
+    throw new ApiError(500, "Failed to upload avatar to Cloudinary");
+  }
 
-    const avatar = await uploadOnCloudinary(avatarlocalPath);
-    console.log(avatar.url);
+  const space = await Spaces.create({
+    user: user,
+    name,
+    HeaderTitle,
+    customMessage,
+    description,
+    avatar: avatarResult.secure_url,
+  });
 
-    
+  if (!space) {
+    throw new ApiError(500, "Something went wrong while creating the space");
+  }
 
-    const Space = await Spaces.create({
-        user:user,
-        name,
-        HeaderTitle,
-        customMessage,
-        description,
-        avatar:avatar.url
-    })
+  return res.status(200).json(new ApiResponse(200, space, "Space created successfully"));
+});
 
-    if(!Space){
-        throw new ApiError(
-            400 ,
-            "Something went wrong while creating the space"
-        )
-    }
-
-    
-
-    return res
-    .status(200)
-    .json(
-        new ApiResponse(
-            200,
-            Space,
-            "Space created successfully"
-        )
-    )
-
-
-
-})
+export { createSpace };
 
 const getSpaceById = asyncHandler(async(req, res) => {
     const{SpaceId} = req.params;
@@ -292,65 +264,48 @@ const updateSpace = asyncHandler(async(req , res) => {
       
 })
 
-const updateAvatar = asyncHandler(async(req, res) => {
-    const{spaceId} = req.body;
-    const avatarlocalPath= req.file?.path;
+const updateAvatar = asyncHandler(async (req, res) => {
+  const { spaceId } = req.body;
+  const avatarFile = req.file; // Multer memory storage buffer
 
-    const user = req.user?._id;
+  const user = req.user?._id;
 
-    const Space = await Spaces.findById(spaceId);
-    
-    if (Space.user.toString() !== user.toString()) {
-        throw new ApiError(403, "You are not authorized to delete this space");
-    }
+  const space = await Spaces.findById(spaceId);
+  if (!space) {
+    throw new ApiError(404, "Space not found");
+  }
 
-    if(!avatarlocalPath){
-        throw new ApiError(
-            400 , 
-            "Avatar Path is required!"
-        )
-    }
+  if (space.user.toString() !== user.toString()) {
+    throw new ApiError(403, "You are not authorized to update this space");
+  }
 
-    const avatar = await uploadOnCloudinary(avatarlocalPath);
-    if(!avatar.url){
-        throw new ApiError(
-            400 , 
-            "Something went wrong while uploading the file on the cloudinary!"
-        )
-    }
+  if (!avatarFile?.buffer) {
+    throw new ApiError(400, "Avatar file is required");
+  }
 
-    const avatarSpace = await Spaces.findByIdAndUpdate(
-        spaceId,
-        {
-            $set:{
-                avatar:avatar.url
-            }
-        },
-        {
-            new:true
-        }
-    )
+  // Upload avatar buffer to Cloudinary
+  const avatarResult = await uploadOnCloudinary(avatarFile.buffer, `space-avatar-${Date.now()}`);
+  if (!avatarResult?.secure_url) {
+    throw new ApiError(500, "Something went wrong while uploading the file to Cloudinary");
+  }
 
-    if(!avatarSpace){
-        throw new ApiError(
-            400 , 
-            "Something went wrong while updating the avatar"
-        )
-    }
+  // Update the space avatar
+  const updatedSpace = await Spaces.findByIdAndUpdate(
+    spaceId,
+    { avatar: avatarResult.secure_url },
+    { new: true }
+  );
 
-    return res
-    .status(200)
-    .json(
-        new ApiResponse(
-            201 ,
-            avatarSpace,
-            "Avatar updated successfully"
-        )
-    )
+  if (!updatedSpace) {
+    throw new ApiError(500, "Failed to update avatar");
+  }
 
+  return res.status(200).json(
+    new ApiResponse(200, updatedSpace, "Avatar updated successfully")
+  );
+});
 
-
-})
+export { updateAvatar };
 
 
 export{
