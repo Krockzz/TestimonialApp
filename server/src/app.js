@@ -9,7 +9,7 @@ import "./auth/passport.js"
 const app = express();
 
 app.use(cors({
-    origin: "https://testimonia-delta.vercel.app/",
+    origin: ["https://testimonia-delta.vercel.app/"],
     credentials: true,
 }))
 
