@@ -33,10 +33,10 @@ export async function loader({ request }) {
     headers.append("Set-Cookie", await refreshTokenCookie.serialize(refreshTokens));
 
     // Redirect to /space without query params
-    return redirect("/space", { headers });
+    // return redirect("/space", { headers });
   }
 
-  // 3️⃣ Otherwise, fetch spaces using existing cookies
+ 
   const cookieHeader = request.headers.get("Cookie");
 
   const response = await fetch(`${API_URL}/api/v1/users/spaces/getSpaces`, {
