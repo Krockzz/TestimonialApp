@@ -1,44 +1,43 @@
-// routes/auth.routes.js
+
 import { Router } from "express";
 import passport from "passport";
 
 const router = Router();
 
-// Step 1: Start Google Login
+
 router.get(
   "/google",
   passport.authenticate("google", { scope: ["profile", "email"] })
 );
 
-// Step 2: Google Callback
+
 router.get(
   "/google/callback",
   passport.authenticate("google", {
     failureRedirect: "https://testimonia-delta.vercel.app/login",
-    session: false,
+    session: false, // keep false since we use JWT
   }),
   async (req, res) => {
     try {
+      
       const accessToken = req.user.GenerateAccessTokens();
       const refreshToken = req.user.GenerateRefreshTokens();
 
-      // Save refresh token in DB
+     
       req.user.refreshTokens = refreshToken;
       await req.user.save();
 
-      // Send as cookies
-      res.cookie("accessToken", accessToken, {
+   
+      const cookieOptions = {
         httpOnly: true,
-        secure: true, // set true in production (HTTPS)
-        sameSite: "none",
-      });
+        secure: true,      // HTTPS only
+        sameSite: "none",  // cross-domain
+      };
 
-      res.cookie("refreshToken", refreshToken, {
-        httpOnly: true,
-        secure: true,
-        sameSite: "none",
-      });
+      res.cookie("accessToken", accessToken, { ...cookieOptions, maxAge: 24 * 60 * 60 * 1000 });       // 1 day
+      res.cookie("refreshToken", refreshToken, { ...cookieOptions, maxAge: 7 * 24 * 60 * 60 * 1000 }); // 7 days
 
+      // Redirect to frontend dashboard
       res.redirect("https://testimonia-delta.vercel.app/space");
     } catch (error) {
       console.error("Google login error:", error);
@@ -47,15 +46,14 @@ router.get(
   }
 );
 
-// Step 3: Google Logout
+// Logout Route
 router.get("/logout", async (req, res) => {
   try {
     if (req.user) {
-      req.user.refreshTokens = null; // clear stored refresh token
+      req.user.refreshTokens = null; // clear refresh token
       await req.user.save();
     }
 
-    // Clear cookies
     res.clearCookie("accessToken");
     res.clearCookie("refreshToken");
 
