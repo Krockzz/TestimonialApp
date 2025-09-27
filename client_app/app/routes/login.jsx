@@ -32,7 +32,7 @@ export async function action({ request }) {
     // Extracting  cookies from backend response headers
   const cookies = res.headers.get("Set-Cookie");
 
-    return redirect("/space" ,
+    return redirect("https://testimonia-delta.vercel.app/space" ,
       
       {
         headers:{
