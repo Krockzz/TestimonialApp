@@ -32,8 +32,11 @@ passport.use(
         let user = await User.findOne({ googleId: profile.id });
         let cloudinaryAvatar = null;
 
+        console.log(user)
+        console.log(profile)
+
         if (profile.photos[0]?.value) {
-          cloudinaryAvatar = await downloadAndUploadGoogleAvatar(profile.photos[0].value);
+          // cloudinaryAvatar = await downloadAndUploadGoogleAvatar(profile.photos[0].value);
         }
 
         if (!user) {
