@@ -7,10 +7,11 @@ import fetch from "node-fetch";
 // Utility to download Google avatar and upload to Cloudinary
 const downloadAndUploadGoogleAvatar = async (url) => {
   try {
+    console.log(`So the url is: ${url}`)
     const response = await fetch(url);
     console.log(response)
-    const arrayBuffer = await response.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
+    const buffer = await response.arrayBuffer();
+    // const buffer = Buffer.from(arrayBuffer);
 
     const uploadResult = await uploadOnCloudinary(buffer, `google-avatar-${Date.now()}`);
     console.log(uploadResult.secure_url)
