@@ -15,7 +15,7 @@ router.get(
   "/google/callback",
   passport.authenticate("google", {
     failureRedirect: "https://testimonia-delta.vercel.app/login",
-    session: false, // keep false since we use JWT
+    session: false, 
   }),
   async (req, res) => {
     try {
