@@ -69,13 +69,6 @@ const getAllTestimonial = asyncHandler(async (req, res) => {
   });
 });
 
-import asyncHandler from "express-async-handler";
-import mongoose from "mongoose";
-import ApiError from "../utils/ApiError.js";
-import Spaces from "../models/Spaces.models.js";
-import Testimonial from "../models/Testimonial.models.js";
-import { uploadOnCloudinary } from "../utils/cloudinary.js";
-
 const createTestimonial = asyncHandler(async (req, res) => {
   const { spaceId } = req.params;
   const { name, email, text, rating } = req.body;
