@@ -4,6 +4,7 @@ import cookieParser from "cookie-parser"
 import passport from "passport";
 import session from "express-session"
 import "./auth/passport.js"
+import MongoStore from "connect-mongo";
 
 // Creating an instance of express server
 const app = express();
@@ -29,6 +30,7 @@ app.use(
     secret: "supersecretkey",
     resave: false,
     saveUninitialized: false,
+    store: MongoStore.create({ mongoUrl: process.env.MongoDb_URI}),
     cookie: {
       secure: true,       // HTTPS only
       httpOnly: true,     // Not accessible via JS
