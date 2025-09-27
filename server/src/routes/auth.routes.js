@@ -30,19 +30,19 @@ router.get(
       res.cookie("accessToken", accessToken, {
         httpOnly: true,
         secure: false, // set true in production (HTTPS)
-        sameSite: "none",
+        sameSite: "lax",
       });
 
       res.cookie("refreshTokens", refreshToken, {
         httpOnly: true,
         secure: false,
-        sameSite: "none",
+        sameSite: "lax",
       });
 
       res.redirect("https://testimonia-delta.vercel.app/space");
     } catch (error) {
       console.error("Google login error:", error);
-      res.redirect("http://localhost:5173/login?error=true");
+      res.redirect("https://testimonia-delta.vercel.app");
     }
   }
 );
