@@ -22,12 +22,19 @@ app.use(express.urlencoded({
     limit: "16kb"
 }))
 
-app.use(session({
-  secret: "supersecretkey",  
-  resave: false,
-  saveUninitialized: false,
-}));
-
+app.use(
+  session({
+    secret: process.env.SESSION_SECRET || "supersecretkey",
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      secure: true,       // HTTPS only
+      httpOnly: true,     // Not accessible via JS
+      sameSite: "none",   // Cross-domain cookies
+      maxAge: 24 * 60 * 60 * 1000, // 1 day
+    },
+  })
+);
 
 app.use(passport.initialize());
 app.use(passport.session());
