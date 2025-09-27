@@ -29,13 +29,13 @@ router.get(
       // Send as cookies
       res.cookie("accessToken", accessToken, {
         httpOnly: true,
-        secure: false, // set true in production (HTTPS)
+        secure: true, // set true in production (HTTPS)
         sameSite: "lax",
       });
 
       res.cookie("refreshToken", refreshToken, {
         httpOnly: true,
-        secure: false,
+        secure: true,
         sameSite: "lax",
       });
 
