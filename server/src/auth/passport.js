@@ -10,8 +10,8 @@ const downloadAndUploadGoogleAvatar = async (url) => {
     console.log(`So the url is: ${url}`)
     const response = await fetch(url);
     console.log(response)
-    const buffer = await response.arrayBuffer();
-    // const buffer = Buffer.from(arrayBuffer);
+    const arrayBuffer = await response.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
 
     const uploadResult = await uploadOnCloudinary(buffer, `google-avatar-${Date.now()}`);
     console.log(uploadResult.secure_url)
