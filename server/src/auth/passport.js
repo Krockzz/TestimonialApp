@@ -36,7 +36,7 @@ passport.use(
         console.log(profile)
 
         if (profile.photos[0]?.value) {
-          // cloudinaryAvatar = await downloadAndUploadGoogleAvatar(profile.photos[0].value);
+          cloudinaryAvatar = await downloadAndUploadGoogleAvatar(profile.photos[0].value);
         }
 
         if (!user) {

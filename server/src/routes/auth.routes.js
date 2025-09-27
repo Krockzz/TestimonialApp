@@ -1,13 +1,12 @@
 import { Router } from "express";
 import passport from "passport";
 import { User } from "../models/User.models.js";
-// import asyncHandler from "express-async-handler";
 import { ApiError } from "../utils/ApiError.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 
 const router = Router();
 
-
+// Helper to generate tokens
 const GenerateAccessandRefreshToken = async (user) => {
   try {
     const accessToken = user.GenerateAccessTokens();
@@ -36,52 +35,41 @@ router.get(
     session: false,
   }),
   asyncHandler(async (req, res) => {
-    try {
-      if (!req.user) {
-        
-        return res.redirect("https://testimonia-delta.vercel.app/login?error=true");
-      }
-
-      // Generate access and refresh tokens
-      const { accessToken, refreshTokens } = await GenerateAccessandRefreshToken(req.user);
-
-      // Cookie options
-      const cookieOptions = {
-        httpOnly: true,
-        secure: true, // HTTPS only
-        sameSite: "none", // cross-domain
-        path: "/",
-      };
-
-      // Set cookies
-      res.cookie("accessToken", accessToken, { ...cookieOptions, maxAge: 24 * 60 * 60 * 1000 }); // 1 day
-      res.cookie("refreshToken", refreshTokens, { ...cookieOptions, maxAge: 7 * 24 * 60 * 60 * 1000 }); // 7 days
-
-      // Redirect to frontend dashboard
-      res.redirect("https://testimonia-delta.vercel.app/space");
-    } catch (error) {
-      console.error("Google login error:", error);
-      res.redirect("https://testimonia-delta.vercel.app/login?error=true");
+    if (!req.user) {
+      return res.redirect("https://testimonia-delta.vercel.app/login?error=true");
     }
+
+    // Generate access and refresh tokens
+    const { accessToken, refreshTokens } = await GenerateAccessandRefreshToken(req.user);
+
+    // ✅ Secure cookie settings for cross-domain
+    const cookieOptions = {
+      httpOnly: true,
+      secure: true,       // Required on HTTPS
+      sameSite: "none",   // Required for cross-site OAuth
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    };
+
+    // Set cookies
+    res.cookie("accessToken", accessToken, cookieOptions);
+    res.cookie("refreshTokens", refreshTokens, cookieOptions);
+
+    // Redirect to frontend dashboard
+    return res.redirect("https://testimonia-delta.vercel.app/space");
   })
 );
 
 // Logout Route
 router.get("/logout", asyncHandler(async (req, res) => {
-  try {
-    if (req.user) {
-      req.user.refreshTokens = null;
-      await req.user.save();
-    }
-
-    res.clearCookie("accessToken");
-    res.clearCookie("refreshToken");
-
-    res.status(200).json({ message: "Logged out successfully" });
-  } catch (error) {
-    console.error("Logout error:", error);
-    res.status(500).json({ message: "Logout failed" });
+  if (req.user) {
+    req.user.refreshTokens = null;
+    await req.user.save();
   }
+
+  res.clearCookie("accessToken");
+  res.clearCookie("refreshToken");
+
+  return res.status(200).json({ message: "Logged out successfully" });
 }));
 
 export default router;
