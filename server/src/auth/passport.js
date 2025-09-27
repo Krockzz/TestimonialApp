@@ -19,7 +19,7 @@ const downloadAndUploadGoogleAvatar = async (url) => {
   }
 };
 
-// Token generator helper
+
 
 
 passport.use(
