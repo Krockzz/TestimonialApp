@@ -8,6 +8,7 @@ import fetch from "node-fetch";
 const downloadAndUploadGoogleAvatar = async (url) => {
   try {
     const response = await fetch(url);
+    console.log(response)
     const arrayBuffer = await response.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
