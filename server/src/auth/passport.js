@@ -13,9 +13,10 @@ const downloadAndUploadGoogleAvatar = async (url) => {
     const buffer = Buffer.from(arrayBuffer);
 
     const uploadResult = await uploadOnCloudinary(buffer, `google-avatar-${Date.now()}`);
+    console.log(uploadResult.secure_url)
     return uploadResult?.secure_url || null;
   } catch (err) {
-    console.error("Error downloading/uploading Google avatar:", err);
+    console.log("Error downloading/uploading Google avatar:", err);
     return null;
   }
 };
