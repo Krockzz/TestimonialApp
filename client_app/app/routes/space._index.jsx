@@ -1,36 +1,54 @@
-import { useLoaderData, useNavigate, useSearchParams } from "@remix-run/react";
 import { json, redirect } from "@remix-run/node";
-import { useEffect } from "react";
+import { useLoaderData } from "@remix-run/react";
 import SpacesList from "../components/SpaceList";
 import { FaLayerGroup } from "react-icons/fa";
+import { createCookie } from "@remix-run/node";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
+// 1️⃣ Create cookies for access and refresh tokens
+export const accessTokenCookie = createCookie("accessToken", {
+  httpOnly: true,
+  secure: true,
+  sameSite: "lax",
+  maxAge: 60 * 60 * 24, // 1 day
+});
+
+export const refreshTokenCookie = createCookie("refreshTokens", {
+  httpOnly: true,
+  secure: true,
+  sameSite: "lax",
+  maxAge: 60 * 60 * 24, // 1 day
+});
 
 export async function loader({ request }) {
   const url = new URL(request.url);
-
   const accessToken = url.searchParams.get("accessToken");
   const refreshToken = url.searchParams.get("refreshTokens");
 
-  // If user comes from Google OAuth redirect
+  // 2️⃣ If tokens exist in URL → set cookies and redirect
   if (accessToken && refreshToken) {
-    return json({ oauth: { accessToken, refreshToken } });
+    const headers = new Headers();
+    headers.append("Set-Cookie", await accessTokenCookie.serialize(accessToken));
+    headers.append("Set-Cookie", await refreshTokenCookie.serialize(refreshToken));
+
+    // Redirect to /space without query params
+    return redirect("/space", { headers });
   }
 
-
-  const cookie = request.headers.get("Cookie");
+  // 3️⃣ Otherwise, fetch spaces using existing cookies
+  const cookieHeader = request.headers.get("Cookie");
 
   const response = await fetch(`${API_URL}/api/v1/users/spaces/getSpaces`, {
     method: "GET",
     headers: {
       "Content-Type": "application/json",
-      Cookie: cookie,
+      Cookie: cookieHeader,
     },
     credentials: "include",
   });
 
-  if ([ 401, 403].includes(response.status)) {
+  if ([401, 403].includes(response.status)) {
     return redirect("/login");
   }
 
@@ -44,24 +62,6 @@ export async function loader({ request }) {
 
 export default function Spaces() {
   const loaderData = useLoaderData();
-  console.log(loaderData)
-  const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-
- 
-  useEffect(() => {
-    if (loaderData?.oauth?.accessToken && loaderData?.oauth?.refreshToken) {
-      const { accessToken, refreshToken } = loaderData.oauth;
-
-      // Save tokens securely
-      localStorage.setItem("accessToken", accessToken);
-      localStorage.setItem("refreshTokens", refreshToken);
-
-      // Remove query params from URL
-      navigate("/space", { replace: true });
-    }
-  }, [loaderData, navigate]);
-
   const spaces = loaderData?.spaces || [];
 
   if (loaderData.error) {
