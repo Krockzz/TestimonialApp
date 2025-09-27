@@ -1,25 +1,19 @@
 import passport from "passport";
 import { Strategy as GoogleStrategy } from "passport-google-oauth20";
 import { User } from "../models/User.models.js";
-import { uploadOnCloudinary } from "../utils/cloudinary.js";
-import fs from "fs";
-import path from "path";
+import { uploadOnCloudinary } from "../utils/cloudinary.js"; // updated function
+import fetch from "node-fetch"; // make sure node-fetch is installed
 
+// Upload Google avatar directly from buffer
 const downloadAndUploadGoogleAvatar = async (url) => {
   try {
-    const tempPath = path.join("./public/temp", `${Date.now()}-avatar.jpg`);
-    
-    // Fetch image from Google
     const response = await fetch(url);
     const arrayBuffer = await response.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
-    // Save temporarily
-    fs.writeFileSync(tempPath, buffer);
-
-    // Upload using your Cloudinary utility
-    const uploadResult = await uploadOnCloudinary(tempPath);
-    return uploadResult?.url || null;
+    // Upload buffer directly to Cloudinary
+    const uploadResult = await uploadOnCloudinary(buffer, `google-avatar-${Date.now()}`);
+    return uploadResult?.secure_url || null;
   } catch (err) {
     console.error("Error downloading/uploading Google avatar:", err);
     return null;

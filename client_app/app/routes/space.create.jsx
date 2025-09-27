@@ -6,6 +6,7 @@ import { requireUser } from "../../../utilities/requireUser";
 
 
 const API_URI = import.meta.env.VITE_API_URL;
+console.log(`So the uri is : ${API_URI}`)
 
 export async function loader({request}){
 
