@@ -18,6 +18,7 @@ router.get(
   }),
   async (req, res) => {
     try {
+      console.log(`I wanna try this ${req.user}`)
       const accessToken = req.user.GenerateAccessTokens();
       const refreshToken = req.user.GenerateRefreshTokens();
 
