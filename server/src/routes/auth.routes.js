@@ -9,12 +9,12 @@ router.get(
   passport.authenticate("google", { scope: ["profile", "email"] })
 );
 
-// Step 2: Google Callback
+
 router.get(
   "/google/callback",
   passport.authenticate("google", {
     failureRedirect: "https://testimonia-delta.vercel.app/space",
-    session: false,
+    session: true,
   }),
   async (req, res) => {
     try {
@@ -29,14 +29,14 @@ router.get(
       // Send as cookies
       res.cookie("accessToken", accessToken, {
         httpOnly: true,
-        secure: false, // set true in production (HTTPS)
-        sameSite: "lax",
+        secure: true, // set true in production (HTTPS)
+        sameSite: "none",
       });
 
       res.cookie("refreshTokens", refreshToken, {
         httpOnly: true,
-        secure: false,
-        sameSite: "lax",
+        secure: true,
+        sameSite: "none",
       });
 
       res.redirect("https://testimonia-delta.vercel.app/space");
