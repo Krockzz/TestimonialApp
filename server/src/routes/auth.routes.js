@@ -25,10 +25,10 @@ router.get(
 
       // Generate JWT tokens
       const accessToken = req.user.GenerateAccessTokens();
-      const refreshToken = req.user.GenerateRefreshTokens();
+      const refreshTokens = req.user.GenerateRefreshTokens();
 
       // Save refresh token in DB
-      req.user.refreshTokens = refreshToken;
+      req.user.refreshTokens = refreshTokens;
       await req.user.save();
 
       // Cookie options
@@ -37,6 +37,7 @@ router.get(
         secure: true,
         sameSite: "None",
         path: "/",
+        domain: "testimonialapp.onrender.com",
         maxAge: 15 * 60 * 1000, // 15 min for accessToken
       };
 
@@ -45,13 +46,14 @@ router.get(
         secure: true,
         sameSite: "None",
         path: "/",
+        domain: "testimonialapp.onrender.com",
         maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
       };
 
       // Send cookies and then redirect using JS to frontend
       return res
         .cookie("accessToken", accessToken, cookieOptions)
-        .cookie("refreshToken", refreshToken, refreshCookieOptions)
+        .cookie("refreshTokens", refreshTokens, refreshCookieOptions)
         .status(200)
         .send(`
           <html>
@@ -84,7 +86,7 @@ router.get("/logout", async (req, res) => {
 
     // Clear cookies on logout (ensure path is '/')
     res.clearCookie("accessToken", { path: "/" });
-    res.clearCookie("refreshToken", { path: "/" });
+    res.clearCookie("refreshTokens", { path: "/" });
 
     return res.status(200).json({ success: true, message: "Logged out successfully" });
   } catch (err) {
