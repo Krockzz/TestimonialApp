@@ -10,7 +10,7 @@ import MongoStore from "connect-mongo";
 const app = express();
 
 app.use(cors({
-    origin: "https://testimonia-delta.vercel.app",
+    origin: process.env.CORS_ORIGIN,
     credentials: true,
 }));
 
