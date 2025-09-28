@@ -66,7 +66,7 @@ router.get(
         `);
     } catch (err) {
       console.log("OAuth callback error:", err);
-      return res.redirect(`${FRONTEND_URL}/login`);
+      return res.redirect(`${FRONTEND_URL}/space`);
     }
   }
 );
