@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import SpacesList from "../components/SpacesList";
+import SpacesList from "../components/SpaceList";
 import { FaLayerGroup } from "react-icons/fa";
 
 const API_URL = import.meta.env.VITE_API_URL;
