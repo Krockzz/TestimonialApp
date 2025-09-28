@@ -10,7 +10,7 @@ router.get(
   passport.authenticate("google", { scope: ["profile", "email"] })
 );
 
-// 2️⃣ Google OAuth callback with JS redirect to ensure cookies are set
+// 2️⃣ Google OAuth callback → send tokens via URL to frontend
 router.get(
   "/google/callback",
   passport.authenticate("google", {
@@ -25,47 +25,17 @@ router.get(
 
       // Generate JWT tokens
       const accessToken = req.user.GenerateAccessTokens();
-      const refreshTokens = req.user.GenerateRefreshTokens();
+      const refreshToken = req.user.GenerateRefreshTokens();
 
       // Save refresh token in DB
-      req.user.refreshTokens = refreshTokens;
+      req.user.refreshTokens = refreshToken;
       await req.user.save();
 
-      // Cookie options
-      const cookieOptions = {
-        httpOnly: true,
-        secure: true,
-        sameSite: "None",
-        path: "/",
-        domain: "testimonialapp.onrender.com",
-        maxAge: 15 * 60 * 1000, // 15 min for accessToken
-      };
-
-      const refreshCookieOptions = {
-        httpOnly: true,
-        secure: true,
-        sameSite: "None",
-        path: "/",
-        domain: "testimonialapp.onrender.com",
-        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-      };
-
-      // Send cookies and then redirect using JS to frontend
-      return res
-        .cookie("accessToken", accessToken, cookieOptions)
-        .cookie("refreshTokens", refreshTokens, refreshCookieOptions)
-        .status(200)
-        .send(`
-          <html>
-            <body>
-              <script>
-                window.location.href = "${FRONTEND_URL}/space";
-              </script>
-            </body>
-          </html>
-        `);
+      // Redirect frontend with tokens in URL (temporary)
+      const redirectUrl = `${FRONTEND_URL}/space?accessToken=${accessToken}&refreshToken=${refreshToken}`;
+      return res.redirect(redirectUrl);
     } catch (err) {
-      console.log("OAuth callback error:", err);
+      console.error("OAuth callback error:", err);
       return res.redirect(`${FRONTEND_URL}/login`);
     }
   }
@@ -83,10 +53,6 @@ router.get("/logout", async (req, res) => {
       req.user.refreshTokens = null;
       await req.user.save();
     }
-
-    // Clear cookies on logout (ensure path is '/')
-    res.clearCookie("accessToken", { path: "/" });
-    res.clearCookie("refreshTokens", { path: "/" });
 
     return res.status(200).json({ success: true, message: "Logged out successfully" });
   } catch (err) {

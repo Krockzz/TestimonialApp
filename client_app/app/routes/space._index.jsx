@@ -10,22 +10,34 @@ export default function Spaces() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // 1️⃣ Read tokens from URL params (from OAuth)
+    const params = new URLSearchParams(window.location.search);
+    const accessToken = params.get("accessToken");
+    const refreshToken = params.get("refreshToken");
+
+    if (accessToken && refreshToken) {
+      // 2️⃣ Set cookies (not httpOnly, so JS can set them)
+      document.cookie = `accessToken=${accessToken}; path=/; max-age=${15 * 60}; secure; samesite=lax`;
+      document.cookie = `refreshToken=${refreshToken}; path=/; max-age=${7 * 24 * 60 * 60}; secure; samesite=lax`;
+
+      // 3️⃣ Clean URL to remove tokens
+      window.history.replaceState({}, "", "/space");
+    }
+
+    // 4️⃣ Fetch spaces from backend
     const fetchSpaces = async () => {
       try {
         const res = await fetch(`${API_URL}/api/v1/users/spaces/getSpaces`, {
           method: "GET",
-          credentials: "include", // ✅ important for cookies
+          credentials: "include", // sends cookies automatically
         });
 
         if ([400, 401, 403].includes(res.status)) {
-          // Unauthorized → redirect to login
           window.location.href = "/login";
           return;
         }
 
-        if (!res.ok) {
-          throw new Error("Failed to fetch spaces");
-        }
+        if (!res.ok) throw new Error("Failed to fetch spaces");
 
         const data = await res.json();
         setSpaces(data.data.docs || []);
