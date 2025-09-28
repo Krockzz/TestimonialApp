@@ -64,7 +64,7 @@ router.get(
       console.log("Refresh Token:", refreshTokens);
 
       // Save refresh token in DB
-      req.user.refreshTokens = refreshToken;
+      req.user.refreshTokens = refreshTokens;
       await req.user.save();
 
       // 🔹 Set cookies directly from backend
