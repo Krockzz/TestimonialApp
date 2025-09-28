@@ -30,11 +30,11 @@ export default function Spaces() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const accessToken = params.get("accessToken");
-    const refreshToken = params.get("refreshTokens");
+    const refreshTokens = params.get("refreshTokens");
 
-    if (accessToken && refreshToken) {
+    if (accessToken && refreshTokens) {
       document.cookie = `accessToken=${accessToken}; path=/; max-age=${15 * 60}; secure; samesite=lax`;
-      document.cookie = `refreshTokens=${refreshToken}; path=/; max-age=${7 * 24 * 60 * 60}; secure; samesite=lax`;
+      document.cookie = `refreshTokens=${refreshTokens}; path=/; max-age=${7 * 24 * 60 * 60}; secure; samesite=lax`;
 
       // Remove tokens from URL and reload page so loader can pick up cookies
       window.history.replaceState({}, "", "/space");
