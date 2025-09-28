@@ -1,58 +1,46 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
+import { useLoaderData, redirect } from "@remix-run/react";
 import SpacesList from "../components/SpaceList";
 import { FaLayerGroup } from "react-icons/fa";
 
-const API_URL = import.meta.env.VITE_API_URL;
+export async function loader({ request }) {
+  const cookieHeader = request.headers.get("cookie") || "";
+
+  const res = await fetch(`${process.env.VITE_API_URL}/api/v1/users/spaces/getSpaces`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      Cookie: cookieHeader,
+    },
+    credentials: "include",
+  });
+
+  if ([401, 403].includes(res.status)) {
+    return redirect("/login");
+  }
+
+  const data = await res.json();
+  return { spaces: data.data.docs || [] };
+}
 
 export default function Spaces() {
-  const [spaces, setSpaces] = useState([]);
-  const [error, setError] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const loaderData = useLoaderData();
 
+  // ✅ Read OAuth tokens from URL and set cookies
   useEffect(() => {
-   
     const params = new URLSearchParams(window.location.search);
     const accessToken = params.get("accessToken");
-    const refreshTokens = params.get("refreshTokens");
+    const refreshToken = params.get("refreshTokens");
 
-    if (accessToken && refreshTokens) {
-     
+    if (accessToken && refreshToken) {
       document.cookie = `accessToken=${accessToken}; path=/; max-age=${15 * 60}; secure; samesite=lax`;
-      document.cookie = `refreshTokens=${refreshTokens}; path=/; max-age=${7 * 24 * 60 * 60}; secure; samesite=lax`;
+      document.cookie = `refreshTokens=${refreshToken}; path=/; max-age=${7 * 24 * 60 * 60}; secure; samesite=lax`;
 
-      // 3️⃣ Clean URL to remove tokens
+      // Remove tokens from URL and reload page so loader can pick up cookies
       window.history.replaceState({}, "", "/space");
+      window.location.reload();
     }
-
-    // 4️⃣ Fetch spaces from backend
-    const fetchSpaces = async () => {
-      try {
-        const res = await fetch(`${API_URL}/api/v1/users/spaces/getSpaces`, {
-          method: "GET",
-          credentials: "include", // sends cookies automatically
-        });
-
-        if ([401, 403].includes(res.status)) {
-          window.location.href = "/login";
-          return;
-        }
-
-        if (!res.ok) throw new Error("Failed to fetch spaces");
-
-        const data = await res.json();
-        setSpaces(data.data.docs || []);
-      } catch (err) {
-        setError(err.message || "Something went wrong");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchSpaces();
   }, []);
-
-  if (loading) return <div className="text-white p-4">Loading spaces...</div>;
-  if (error) return <div className="text-red-500 p-4">Error: {error}</div>;
 
   return (
     <div className="p-6 md:p-10 bg-gradient-to-br from-black via-gray-900 to-black min-h-screen space-y-14">
@@ -74,16 +62,13 @@ export default function Spaces() {
               <FaLayerGroup className="text-white text-2xl" />
               <h2 className="text-lg font-semibold text-white">Total Spaces</h2>
             </div>
-            <p className="text-4xl font-extrabold text-white">{spaces.length}</p>
+            <p className="text-4xl font-extrabold text-white">{loaderData.spaces.length}</p>
           </div>
         </div>
       </div>
 
-      {/* Divider */}
       <div className="border-t border-white/10" />
-
-      {/* Spaces List Section */}
-      <SpacesList spaces={spaces} />
+      <SpacesList spaces={loaderData.spaces} />
     </div>
   );
 }
