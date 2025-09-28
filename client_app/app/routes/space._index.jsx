@@ -1,58 +1,46 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
+import { useLoaderData, redirect } from "@remix-run/react";
 import SpacesList from "../components/SpaceList";
 import { FaLayerGroup } from "react-icons/fa";
 
-const API_URL = import.meta.env.VITE_API_URL;
+export async function loader({ request }) {
+  const cookieHeader = request.headers.get("cookie") || "";
+
+  const res = await fetch(`${process.env.VITE_API_URL}/api/v1/users/spaces/getSpaces`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      Cookie: cookieHeader,
+    },
+    credentials: "include",
+  });
+
+  if ([401, 403].includes(res.status)) {
+    return redirect("/login");
+  }
+
+  const data = await res.json();
+  return { spaces: data.data.docs || [] };
+}
 
 export default function Spaces() {
-  const [spaces, setSpaces] = useState([]);
-  const [error, setError] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const loaderData = useLoaderData();
 
   useEffect(() => {
-    // 1️⃣ Read tokens from URL after OAuth redirect
     const params = new URLSearchParams(window.location.search);
     const accessToken = params.get("accessToken");
-    const refreshToken = params.get("refreshToken");
+    const refreshTokens = params.get("refreshTokens");
 
-    if (accessToken && refreshToken) {
-      // 2️⃣ Set cookies (HttpOnly not possible here, but OK for your setup)
+    if (accessToken && refreshTokens) {
+      // ⚡ Set cookies for OAuth login
       document.cookie = `accessToken=${accessToken}; path=/; max-age=${15 * 60}; secure; samesite=lax`;
-      document.cookie = `refreshToken=${refreshToken}; path=/; max-age=${7 * 24 * 60 * 60}; secure; samesite=lax`;
+      document.cookie = `refreshTokens=${refreshTokens}; path=/; max-age=${7 * 24 * 60 * 60}; secure; samesite=lax`;
 
-      // 3️⃣ Remove tokens from URL
+      // Clean URL and reload so loader can read cookies
       window.history.replaceState({}, "", "/space");
+      window.location.reload();
     }
-
-    // 4️⃣ Fetch spaces from backend
-    const fetchSpaces = async () => {
-      try {
-        const res = await fetch(`${API_URL}/api/v1/users/spaces/getSpaces`, {
-          method: "GET",
-          credentials: "include", // ✅ send cookies automatically
-        });
-
-        if ([401, 403].includes(res.status)) {
-          window.location.href = "/login";
-          return;
-        }
-
-        if (!res.ok) throw new Error("Failed to fetch spaces");
-
-        const data = await res.json();
-        setSpaces(data.data.docs || []);
-      } catch (err) {
-        setError(err.message || "Something went wrong");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchSpaces();
   }, []);
-
-  if (loading) return <div className="text-white p-4">Loading spaces...</div>;
-  if (error) return <div className="text-red-500 p-4">Error: {error}</div>;
 
   return (
     <div className="p-6 md:p-10 bg-gradient-to-br from-black via-gray-900 to-black min-h-screen space-y-14">
@@ -61,10 +49,12 @@ export default function Spaces() {
         <h1 className="text-[42px] md:text-5xl font-extrabold text-white tracking-tight">
           Overview
         </h1>
-        <p className="text-gray-400 text-sm">A summary of your testimonial activity</p>
+        <p className="text-gray-400 text-sm">
+          A summary of your testimonial activity
+        </p>
       </div>
 
-      {/* Stats */}
+      {/* Stats Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
         <div className="relative rounded-3xl p-[1px] bg-gradient-to-br from-blue-600 to-purple-700 shadow-xl hover:shadow-2xl transition-shadow duration-300">
           <div className="bg-gradient-to-br from-gray-900/80 to-gray-800/90 rounded-3xl p-6 flex flex-col justify-center items-start backdrop-blur-xl">
@@ -72,13 +62,13 @@ export default function Spaces() {
               <FaLayerGroup className="text-white text-2xl" />
               <h2 className="text-lg font-semibold text-white">Total Spaces</h2>
             </div>
-            <p className="text-4xl font-extrabold text-white">{spaces.length}</p>
+            <p className="text-4xl font-extrabold text-white">{loaderData.spaces.length}</p>
           </div>
         </div>
       </div>
 
       <div className="border-t border-white/10" />
-      <SpacesList spaces={spaces} />
+      <SpacesList spaces={loaderData.spaces} />
     </div>
   );
 }
