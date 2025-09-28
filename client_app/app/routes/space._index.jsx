@@ -13,8 +13,8 @@ export async function loader({ request }) {
 
   // ✅ Check for OAuth flow
   const isOAuth = url.searchParams.get("oauth") === "true";
-  const access = url.searchParams.get("accessToken");
-  const refresh = url.searchParams.get("refreshTokens");
+  const access = decodeURIComponent(url.searchParams.get("accessToken"));
+  const refresh = decodeURIComponent(url.searchParams.get("refreshTokens"));
 
   if (isOAuth && access && refresh) {
     // Serialize cookies
