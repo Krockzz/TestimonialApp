@@ -4,47 +4,10 @@ import { FaLayerGroup } from "react-icons/fa";
 import SpacesList from "../components/SpaceList";
 import { createCookie } from "@remix-run/node";
 
-// Create cookies for access and refresh tokens
-const accessTokenCookie = createCookie("accessToken");
-const refreshTokenCookie = createCookie("refreshTokens");
+
 
 export async function loader({ request }) {
-  const url = new URL(request.url);
-
-  // ✅ Check for OAuth flow
-  const isOAuth = url.searchParams.get("oauth") === "true";
-  const access = decodeURIComponent(url.searchParams.get("accessToken"));
-  const refresh = decodeURIComponent(url.searchParams.get("refreshTokens"));
-
-  if (isOAuth && access && refresh) {
-    // Serialize cookies
-    const accessToken = await accessTokenCookie.serialize(access, {
-      httpOnly: true,
-      secure: true,
-      sameSite: "none", // needed for cross-domain
-      path: "/",
-      maxAge: 24 * 60 * 60, 
-    });
-
-    const refreshTokens = await refreshTokenCookie.serialize(refresh, {
-      httpOnly: true,
-      secure: true,
-      sameSite: "none",
-      path: "/",
-      maxAge:  10 * 24 * 60 * 60, 
-    });
-
-    // ✅ Redirect to clean URL so browser sets cookies
-    return redirect("/space", {
-      headers: {
-        "Set-Cookie": [accessToken, refreshTokens],
-      },
-    });
-  }
-
-  // ---------------------------
-  // Normal loader flow: fetch spaces
-  // ---------------------------
+ 
   const cookieHeader = request.headers.get("cookie") || "";
 
   const res = await fetch(`${process.env.VITE_API_URL}/api/v1/users/spaces/getSpaces`, {

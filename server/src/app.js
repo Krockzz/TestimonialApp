@@ -10,7 +10,7 @@ import MongoStore from "connect-mongo";
 const app = express();
 
 app.use(cors({
-    origin: process.env.CORS_ORIGIN,
+    origin: process.env.CORS_ORIGIN || "https://testimonia-delta.vercel.app/",
     credentials: true,
 }));
 
@@ -35,7 +35,7 @@ app.use(
       secure: true,       // HTTPS only
       httpOnly: true,     // Not accessible via JS
       sameSite: "none",   // Cross-domain cookies
-      maxAge: 24 * 60 * 60 * 1000, // 1 day
+      // maxAge: 24 * 60 * 60 * 1000, // 1 day
     },
   })
 );
