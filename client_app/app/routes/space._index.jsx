@@ -1,4 +1,4 @@
-import { json, redirect } from "@remix-run/node";
+import { json, redirect } from "@remix-run/react";
 import { useLoaderData } from "@remix-run/react";
 import { FaLayerGroup } from "react-icons/fa";
 import SpacesList from "../components/SpaceList";
@@ -25,11 +25,13 @@ export async function loader({ request }) {
   }
 
   const data = await res.json();
-  return json({ spaces: data.data.docs || [] });
+  
+  return json({ data });
 }
 
 export default function Spaces() {
-  const loaderData = useLoaderData();
+  const {data} = useLoaderData();
+  const space = data.data
 
   return (
     <div className="p-6 md:p-10 bg-gradient-to-br from-black via-gray-900 to-black min-h-screen space-y-14">
@@ -52,14 +54,14 @@ export default function Spaces() {
               <h2 className="text-lg font-semibold text-white">Total Spaces</h2>
             </div>
             <p className="text-4xl font-extrabold text-white">
-              {loaderData.spaces.length}
+              {space.length}
             </p>
           </div>
         </div>
       </div>
 
       <div className="border-t border-white/10" />
-      <SpacesList spaces={loaderData.spaces} />
+      <SpacesList spaces={space} />
     </div>
   );
 }
