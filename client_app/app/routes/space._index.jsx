@@ -13,12 +13,12 @@ export async function loader({ request }) {
 
   // ✅ Check for OAuth flow
   const isOAuth = url.searchParams.get("oauth") === "true";
-  const accessToken = url.searchParams.get("accessToken");
-  const refreshTokens = url.searchParams.get("refreshTokens");
+  const access = url.searchParams.get("accessToken");
+  const refresh = url.searchParams.get("refreshTokens");
 
-  if (isOAuth && accessToken && refreshTokens) {
+  if (isOAuth && access && refresh) {
     // Serialize cookies
-    const accessCookie = await accessTokenCookie.serialize(accessToken, {
+    const accessToken = await accessTokenCookie.serialize(access, {
       httpOnly: true,
       secure: true,
       sameSite: "none", // needed for cross-domain
@@ -26,7 +26,7 @@ export async function loader({ request }) {
       maxAge: 15 * 60, // 15 minutes
     });
 
-    const refreshCookie = await refreshTokenCookie.serialize(refreshTokens, {
+    const refreshTokens = await refreshTokenCookie.serialize(refresh, {
       httpOnly: true,
       secure: true,
       sameSite: "none",
@@ -37,7 +37,7 @@ export async function loader({ request }) {
     // ✅ Redirect to clean URL so browser sets cookies
     return redirect("/space", {
       headers: {
-        "Set-Cookie": [accessCookie, refreshCookie],
+        "Set-Cookie": [accessToken, refreshTokens],
       },
     });
   }
