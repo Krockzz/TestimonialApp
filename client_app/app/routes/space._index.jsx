@@ -23,7 +23,7 @@ export async function loader({ request }) {
       secure: true,
       sameSite: "none", // needed for cross-domain
       path: "/",
-      maxAge: 15 * 60, // 15 minutes
+      // maxAge: 15 * 60, // 15 minutes
     });
 
     const refreshTokens = await refreshTokenCookie.serialize(refresh, {
@@ -31,7 +31,7 @@ export async function loader({ request }) {
       secure: true,
       sameSite: "none",
       path: "/",
-      maxAge: 7 * 24 * 60 * 60, // 7 days
+      // maxAge: 7 * 24 * 60 * 60, // 7 days
     });
 
     // ✅ Redirect to clean URL so browser sets cookies
