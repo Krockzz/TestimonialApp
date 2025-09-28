@@ -1,11 +1,48 @@
-import { useEffect } from "react";
-import { useLoaderData, redirect } from "@remix-run/react";
-import SpacesList from "../components/SpaceList";
+import { json, redirect } from "@remix-run/node";
+import { useLoaderData } from "@remix-run/react";
 import { FaLayerGroup } from "react-icons/fa";
+import SpacesList from "../components/SpaceList";
+import { createCookie } from "@remix-run/node";
+
+const accessTokenCookie = createCookie("accessToken");
+const refreshTokenCookie = createCookie("refreshTokens");
 
 export async function loader({ request }) {
+  const url = new URL(request.url);
+
+  // ✅ Check for OAuth flag
+  const isOAuth = url.searchParams.get("oauth") === "true";
+  const accessToken = url.searchParams.get("accessToken");
+  const refreshTokens = url.searchParams.get("refreshTokens");
+
+  // If it's OAuth flow → set cookies and redirect cleanly
+  if (isOAuth && accessToken && refreshTokens) {
+    return redirect("/space", {
+      headers: {
+        "Set-Cookie": [
+          await accessTokenCookie.serialize(accessToken, {
+            httpOnly: true,
+            secure: true,
+            sameSite: "none",
+            path: "/",
+            maxAge: 15 * 60, // 15 minutes
+          }),
+          await refreshTokenCookie.serialize(refreshTokens, {
+            httpOnly: true,
+            secure: true,
+            sameSite: "none",
+            path: "/",
+            maxAge: 7 * 24 * 60 * 60, // 7 days
+          }),
+        ],
+      },
+    });
+  }
+
+  // Read cookies
   const cookieHeader = request.headers.get("cookie") || "";
 
+  // Fetch spaces using stored cookies
   const res = await fetch(`${process.env.VITE_API_URL}/api/v1/users/spaces/getSpaces`, {
     method: "GET",
     headers: {
@@ -20,27 +57,11 @@ export async function loader({ request }) {
   }
 
   const data = await res.json();
-  return { spaces: data.data.docs || [] };
+  return json({ spaces: data.data.docs || [] });
 }
 
 export default function Spaces() {
   const loaderData = useLoaderData();
-
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const accessToken = params.get("accessToken");
-    const refreshTokens = params.get("refreshTokens");
-
-    if (accessToken && refreshTokens) {
-      // ⚡ Set cookies for OAuth login
-      document.cookie = `accessToken=${accessToken}; path=/; max-age=${15 * 60}; secure; samesite=lax`;
-      document.cookie = `refreshTokens=${refreshTokens}; path=/; max-age=${7 * 24 * 60 * 60}; secure; samesite=lax`;
-
-      // Clean URL and reload so loader can read cookies
-      window.history.replaceState({}, "", "/space");
-      window.location.reload();
-    }
-  }, []);
 
   return (
     <div className="p-6 md:p-10 bg-gradient-to-br from-black via-gray-900 to-black min-h-screen space-y-14">
@@ -62,7 +83,9 @@ export default function Spaces() {
               <FaLayerGroup className="text-white text-2xl" />
               <h2 className="text-lg font-semibold text-white">Total Spaces</h2>
             </div>
-            <p className="text-4xl font-extrabold text-white">{loaderData.spaces.length}</p>
+            <p className="text-4xl font-extrabold text-white">
+              {loaderData.spaces.length}
+            </p>
           </div>
         </div>
       </div>

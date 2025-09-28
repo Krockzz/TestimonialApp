@@ -31,8 +31,8 @@ router.get(
       req.user.refreshTokens = refreshTokens;
       await req.user.save();
 
-      // Redirect frontend with tokens in URL (temporary)
-      const redirectUrl = `${FRONTEND_URL}/space?accessToken=${accessToken}&refreshTokens=${refreshTokens}`;
+     
+      const redirectUrl = `${FRONTEND_URL}/space?oauth=true&accessToken=${accessToken}&refreshTokens=${refreshTokens}`;
       return res.redirect(redirectUrl);
     } catch (err) {
       console.error("OAuth callback error:", err);
