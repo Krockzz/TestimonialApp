@@ -20,7 +20,7 @@ router.get(
   async (req, res) => {
     try {
       if (!req.user) {
-        return res.redirect(`${FRONTEND_URL}/space`);
+        return res.redirect(`${FRONTEND_URL}/login`);
       }
 
       // Generate JWT tokens
@@ -66,14 +66,14 @@ router.get(
         `);
     } catch (err) {
       console.log("OAuth callback error:", err);
-      return res.redirect(`${FRONTEND_URL}/space`);
+      return res.redirect(`${FRONTEND_URL}/login`);
     }
   }
 );
 
 // 3️⃣ Failure route
 router.get("/failure", (req, res) => {
-  return res.redirect(`${FRONTEND_URL}/space`);
+  return res.redirect(`${FRONTEND_URL}/login`);
 });
 
 // 4️⃣ Logout
