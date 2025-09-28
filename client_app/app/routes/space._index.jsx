@@ -33,7 +33,7 @@ export async function loader({ request }) {
     headers.append("Set-Cookie", await refreshTokenCookie.serialize(refreshTokens));
 
     // Redirect to /space without query params
-    return json({ headers });
+    return redirect(`space${accessToken}${refreshTokens}` , { headers });
   }
 
  
