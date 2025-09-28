@@ -1,44 +1,46 @@
-import { json, redirect } from "@remix-run/node";
-import { useLoaderData } from "@remix-run/react";
+import { useEffect, useState } from "react";
 import SpacesList from "../components/SpaceList";
 import { FaLayerGroup } from "react-icons/fa";
-// import { createCookie } from "@remix-run/node";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
-export async function loader({ request }) {
-const cookieHeader = request.headers.get("Cookie");
-console.log(cookieHeader)
-
-  const response = await fetch(`${API_URL}/api/v1/users/spaces/getSpaces`, {
-    method: "GET",
-    headers: {
-      "Content-Type": "application/json",
-      Cookie: cookieHeader,
-    },
-    credentials: "include",
-  });
-
- console.log(response.status)
-  if ([400 , 401, 403].includes(response.status)) {
-    return redirect("/login");
-  }
-
-  if (!response.ok) {
-    return json({ error: "Failed to fetch spaces" }, { status: 500 });
-  }
-
-  const result = await response.json();
-  return json({ spaces: result.data.docs });
-}
-
 export default function Spaces() {
-  const loaderData = useLoaderData();
-  const spaces = loaderData?.spaces || [];
+  const [spaces, setSpaces] = useState([]);
+  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  if (loaderData.error) {
-    return <div className="text-red-500 p-4">Error: {loaderData.error}</div>;
-  }
+  useEffect(() => {
+    const fetchSpaces = async () => {
+      try {
+        const res = await fetch(`${API_URL}/api/v1/users/spaces/getSpaces`, {
+          method: "GET",
+          credentials: "include", // ✅ important for cookies
+        });
+
+        if ([400, 401, 403].includes(res.status)) {
+          // Unauthorized → redirect to login
+          window.location.href = "/login";
+          return;
+        }
+
+        if (!res.ok) {
+          throw new Error("Failed to fetch spaces");
+        }
+
+        const data = await res.json();
+        setSpaces(data.data.docs || []);
+      } catch (err) {
+        setError(err.message || "Something went wrong");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchSpaces();
+  }, []);
+
+  if (loading) return <div className="text-white p-4">Loading spaces...</div>;
+  if (error) return <div className="text-red-500 p-4">Error: {error}</div>;
 
   return (
     <div className="p-6 md:p-10 bg-gradient-to-br from-black via-gray-900 to-black min-h-screen space-y-14">
