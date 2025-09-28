@@ -26,6 +26,8 @@ router.get(
       // Generate JWT tokens
       const accessToken = req.user.GenerateAccessTokens();
       const refreshTokens = req.user.GenerateRefreshTokens();
+      console.log(accessToken)
+      console.log(refreshTokens)
 
       // Save refresh token in DB
       req.user.refreshTokens = refreshTokens;
