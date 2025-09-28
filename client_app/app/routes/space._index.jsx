@@ -28,19 +28,20 @@ export default function Spaces() {
 
   // ✅ Read OAuth tokens from URL and set cookies
   useEffect(() => {
+   
     const params = new URLSearchParams(window.location.search);
     const accessToken = params.get("accessToken");
     const refreshTokens = params.get("refreshTokens");
 
     if (accessToken && refreshTokens) {
+     
       document.cookie = `accessToken=${accessToken}; path=/; max-age=${15 * 60}; secure; samesite=lax`;
       document.cookie = `refreshTokens=${refreshTokens}; path=/; max-age=${7 * 24 * 60 * 60}; secure; samesite=lax`;
 
-      // Remove tokens from URL and reload page so loader can pick up cookies
+      // 3️⃣ Clean URL to remove tokens
       window.history.replaceState({}, "", "/space");
-      window.location.reload();
     }
-  }, []);
+  }, [])
 
   return (
     <div className="p-6 md:p-10 bg-gradient-to-br from-black via-gray-900 to-black min-h-screen space-y-14">
