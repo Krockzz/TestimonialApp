@@ -1,46 +1,18 @@
-import { json, redirect } from "@remix-run/node";
-import { useLoaderData } from "@remix-run/react";
-import { FaLayerGroup } from "react-icons/fa";
+import { useEffect } from "react";
+import { useLoaderData, redirect } from "@remix-run/react";
 import SpacesList from "../components/SpaceList";
+import { FaLayerGroup } from "react-icons/fa";
 
-// Loader for /space route
 export async function loader({ request }) {
-  const url = new URL(request.url);
+  const cookieHeader = request.headers.get("cookie") || "";
 
-  // ✅ OAuth flow: check if redirected from Google login
-  const isOAuth = url.searchParams.get("oauth") === "true";
-  const accessToken = url.searchParams.get("accessToken");
-
-  // If OAuth, redirect to clean URL but pass token via loader
-  if (isOAuth && accessToken) {
-    // Redirect to /space without query params
-    return redirect("/space", {
-      headers: {
-        // You can pass a custom header or session if needed here
-      },
-    });
-  }
-
-  // ---------------------------
-  // Normal loader flow: fetch spaces
-  // ---------------------------
-  // First, get token from query param (first request after OAuth) or later from somewhere else
-  let token = accessToken;
-  console.log(token)
-
-  // You could also store token in a session or secure cookie for future requests
-  if (!token) {
-    // Example: no token provided → redirect to login
-    return redirect("/login");
-  }
-
-  // Fetch spaces using Authorization header
   const res = await fetch(`${process.env.VITE_API_URL}/api/v1/users/spaces/getSpaces`, {
     method: "GET",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
+      Cookie: cookieHeader,
     },
+    credentials: "include",
   });
 
   if ([401, 403].includes(res.status)) {
@@ -48,12 +20,27 @@ export async function loader({ request }) {
   }
 
   const data = await res.json();
-  return json({ spaces: data.data.docs || [], accessToken: token });
+  return { spaces: data.data.docs || [] };
 }
 
 export default function Spaces() {
   const loaderData = useLoaderData();
-  const token = loaderData.accessToken;
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const accessToken = params.get("accessToken");
+    const refreshTokens = params.get("refreshTokens");
+
+    if (accessToken && refreshTokens) {
+      // ⚡ Set cookies for OAuth login
+      document.cookie = `accessToken=${accessToken}; path=/; max-age=${15 * 60}; secure; samesite=lax`;
+      document.cookie = `refreshTokens=${refreshTokens}; path=/; max-age=${7 * 24 * 60 * 60}; secure; samesite=lax`;
+
+      // Clean URL and reload so loader can read cookies
+      window.history.replaceState({}, "", "/space");
+      window.location.reload();
+    }
+  }, []);
 
   return (
     <div className="p-6 md:p-10 bg-gradient-to-br from-black via-gray-900 to-black min-h-screen space-y-14">
@@ -75,9 +62,7 @@ export default function Spaces() {
               <FaLayerGroup className="text-white text-2xl" />
               <h2 className="text-lg font-semibold text-white">Total Spaces</h2>
             </div>
-            <p className="text-4xl font-extrabold text-white">
-              {loaderData.spaces.length}
-            </p>
+            <p className="text-4xl font-extrabold text-white">{loaderData.spaces.length}</p>
           </div>
         </div>
       </div>
