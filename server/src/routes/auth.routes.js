@@ -2,6 +2,8 @@ import { Router } from "express";
 import passport from "passport";
 
 const router = Router();
+const FRONTEND_URL = process.env.CORS_ORIGIN || "https://testimonia-delta.vercel.app";
+console.log(FRONTEND_URL)
 
 // 1️⃣ Start Google OAuth
 router.get(
@@ -9,51 +11,74 @@ router.get(
   passport.authenticate("google", { scope: ["profile", "email"] })
 );
 
-// 2️⃣ OAuth callback
+// 2️⃣ Google OAuth callback
 router.get(
   "/google/callback",
-  passport.authenticate("google", { session: false, failureRedirect: "/failure" }),
+  passport.authenticate("google", {
+    session: false,
+    failureRedirect: "/api/auth/failure",
+  }),
   async (req, res) => {
     try {
       if (!req.user) {
-        return res.redirect("https://testimonia-delta.vercel.app/login");
+        return res.redirect(`${FRONTEND_URL}/login`);
       }
 
-      // Generate tokens
+      // Generate JWT tokens
       const accessToken = req.user.GenerateAccessTokens();
-      const refreshToken = req.user.GenerateRefreshTokens();
+      const refreshTokens = req.user.GenerateRefreshTokens();
 
       // Save refresh token in DB
-      req.user.refreshTokens = refreshToken;
+      req.user.refreshTokens = refreshTokens;
       await req.user.save();
 
-      // Redirect frontend with tokens in URL
-      const redirectUrl = `https://testimonia-delta.vercel.app/space?accessToken=${accessToken}&refreshTokens=${refreshToken}`;
-      res.redirect(redirectUrl);
+      // ⚠ Set tokens as secure, cross-domain cookies
+      res.cookie("accessToken", accessToken, {
+        httpOnly: true,
+        secure: true,         // Required for SameSite=None
+        sameSite: "none",     // Allows cross-domain
+        maxAge: 15 * 60 * 1000, // 15 minutes
+      });
 
+      res.cookie("refreshTokens", refreshTokens, {
+        httpOnly: true,
+        secure: true,
+        sameSite: "none",
+        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+      });
+
+      // Redirect to frontend WITHOUT tokens in query params
+      return res.redirect(`${FRONTEND_URL}/space`);
     } catch (err) {
       console.error("OAuth callback error:", err);
-      res.redirect("https://testimonia-delta.vercel.app/login");
+      return res.redirect(`${FRONTEND_URL}/login`);
     }
   }
 );
 
 // 3️⃣ Failure route
 router.get("/failure", (req, res) => {
-  res.redirect("https://testimonia-delta.vercel.app/login");
+  return res.redirect(`${FRONTEND_URL}/login`);
 });
 
-// 4️⃣ Logout (optional)
+// 4️⃣ Logout
 router.get("/logout", async (req, res) => {
   try {
-    if (req.user) {
+    const { refreshTokens } = req.cookies;
+
+    if (refreshTokens && req.user) {
       req.user.refreshTokens = null;
       await req.user.save();
     }
-    res.status(200).json({ success: true, message: "Logged out successfully" });
+
+    // Clear cookies on logout
+    res.clearCookie("accessToken");
+    res.clearCookie("refreshTokens");
+
+    return res.status(200).json({ success: true, message: "Logged out successfully" });
   } catch (err) {
     console.error("Logout error:", err);
-    res.status(500).json({ success: false, message: "Logout failed" });
+    return res.status(500).json({ success: false, message: "Logout failed" });
   }
 });
 
