@@ -40,15 +40,13 @@ router.get(
     //    maxAge: 7 * 24 * 60 * 60 * 1000,
    }
 
-      // ⚠ Set tokens as secure, cross-domain cookies
-      res.cookie("accessToken", accessToken, options);
-
-      res.cookie("refreshTokens", refreshTokens, options );
-
-      // Redirect to frontend WITHOUT tokens in query params
-      return res.redirect(`${FRONTEND_URL}/space`);
+      return res
+       .status(200)
+       .cookie("accessToken" , accessToken, options)
+       .cookie("refreshTokens" , refreshTokens , options)
+       .redirect(`${FRONTEND_URL}/space`)
     } catch (err) {
-      console.error("OAuth callback error:", err);
+      console.log("OAuth callback error:", err);
       return res.redirect(`${FRONTEND_URL}/login`);
     }
   }
