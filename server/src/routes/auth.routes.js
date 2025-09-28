@@ -3,7 +3,6 @@ import passport from "passport";
 
 const router = Router();
 const FRONTEND_URL = process.env.CORS_ORIGIN || "https://testimonia-delta.vercel.app";
-console.log(FRONTEND_URL)
 
 // 1️⃣ Start Google OAuth
 router.get(
@@ -11,7 +10,7 @@ router.get(
   passport.authenticate("google", { scope: ["profile", "email"] })
 );
 
-// 2️⃣ Google OAuth callback
+// 2️⃣ Google OAuth callback with JS redirect to ensure cookies are set
 router.get(
   "/google/callback",
   passport.authenticate("google", {
@@ -26,25 +25,43 @@ router.get(
 
       // Generate JWT tokens
       const accessToken = req.user.GenerateAccessTokens();
-      const refreshTokens = req.user.GenerateRefreshTokens();
+      const refreshToken = req.user.GenerateRefreshTokens();
 
       // Save refresh token in DB
-      req.user.refreshTokens = refreshTokens;
+      req.user.refreshTokens = refreshToken;
       await req.user.save();
 
-      const options = {
-       httpOnly: true,
-       secure: true,
-       sameSite: "None",
-       path: "/", // ⬅️ important!
-    //    maxAge: 7 * 24 * 60 * 60 * 1000,
-   }
+      // Cookie options
+      const cookieOptions = {
+        httpOnly: true,
+        secure: true,
+        sameSite: "None",
+        path: "/",
+        maxAge: 15 * 60 * 1000, // 15 min for accessToken
+      };
 
+      const refreshCookieOptions = {
+        httpOnly: true,
+        secure: true,
+        sameSite: "None",
+        path: "/",
+        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+      };
+
+      // Send cookies and then redirect using JS to frontend
       return res
-       .status(200)
-       .cookie("accessToken" , accessToken, options)
-       .cookie("refreshTokens" , refreshTokens , options)
-       .redirect(`${FRONTEND_URL}/space`)
+        .cookie("accessToken", accessToken, cookieOptions)
+        .cookie("refreshToken", refreshToken, refreshCookieOptions)
+        .status(200)
+        .send(`
+          <html>
+            <body>
+              <script>
+                window.location.href = "${FRONTEND_URL}/space";
+              </script>
+            </body>
+          </html>
+        `);
     } catch (err) {
       console.log("OAuth callback error:", err);
       return res.redirect(`${FRONTEND_URL}/login`);
@@ -60,16 +77,14 @@ router.get("/failure", (req, res) => {
 // 4️⃣ Logout
 router.get("/logout", async (req, res) => {
   try {
-    const { refreshTokens } = req.cookies;
-
-    if (refreshTokens && req.user) {
+    if (req.user) {
       req.user.refreshTokens = null;
       await req.user.save();
     }
 
-    // Clear cookies on logout
-    res.clearCookie("accessToken");
-    res.clearCookie("refreshTokens");
+    // Clear cookies on logout (ensure path is '/')
+    res.clearCookie("accessToken", { path: "/" });
+    res.clearCookie("refreshToken", { path: "/" });
 
     return res.status(200).json({ success: true, message: "Logged out successfully" });
   } catch (err) {
