@@ -8,7 +8,7 @@ const FRONTEND_URL = process.env.CORS_ORIGIN || "https://testimonia-delta.vercel
 // Cookie options
 const accessCookieOptions = {
   httpOnly: true,
-  secure: true,
+  secure: false,
   sameSite: "none",
   maxAge: 24 * 60 * 60 * 1000, // 1 day
   path: "/",
@@ -16,7 +16,7 @@ const accessCookieOptions = {
 
 const refreshCookieOptions = {
   httpOnly: true,
-  secure: true,
+  secure: false,
   sameSite: "none",
   maxAge: 10 * 24 * 60 * 60 * 1000, // 10 days
   path: "/",

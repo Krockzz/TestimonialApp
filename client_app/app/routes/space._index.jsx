@@ -2,7 +2,7 @@ import { json, redirect } from "@remix-run/node";
 import { useLoaderData } from "@remix-run/react";
 import { FaLayerGroup } from "react-icons/fa";
 import SpacesList from "../components/SpaceList";
-import { createCookie } from "@remix-run/node";
+// import { createCookie } from "@remix-run/node";
 
 
 
