@@ -32,22 +32,18 @@ router.get(
       req.user.refreshTokens = refreshTokens;
       await req.user.save();
 
-      // ⚠ Set tokens as secure, cross-domain cookies
-      res.cookie("accessToken", accessToken, {
-        httpOnly: true,
-        secure: true,         // Required for SameSite=None
-        sameSite: "none",     // Allows cross-domain
-        path : "/",
-        maxAge: 15 * 60 * 1000, // 15 minutes
-      });
+      const options = {
+       httpOnly: true,
+       secure: true,
+       sameSite: "None",
+       path: "/", // ⬅️ important!
+    //    maxAge: 7 * 24 * 60 * 60 * 1000,
+   }
 
-      res.cookie("refreshTokens", refreshTokens, {
-        httpOnly: true,
-        secure: true,
-        sameSite: "none",
-        path : "/",
-        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-      });
+      // ⚠ Set tokens as secure, cross-domain cookies
+      res.cookie("accessToken", accessToken, options);
+
+      res.cookie("refreshTokens", refreshTokens, options );
 
       // Redirect to frontend WITHOUT tokens in query params
       return res.redirect(`${FRONTEND_URL}/space`);
