@@ -18,7 +18,7 @@ export default function Spaces() {
     if (accessToken && refreshTokens) {
      
       document.cookie = `accessToken=${accessToken}; path=/; max-age=${15 * 60}; secure; samesite=lax`;
-      document.cookie = `refreshToken=${refreshTokens}; path=/; max-age=${7 * 24 * 60 * 60}; secure; samesite=lax`;
+      document.cookie = `refreshTokens=${refreshTokens}; path=/; max-age=${7 * 24 * 60 * 60}; secure; samesite=lax`;
 
       // 3️⃣ Clean URL to remove tokens
       window.history.replaceState({}, "", "/space");
