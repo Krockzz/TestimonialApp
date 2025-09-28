@@ -2,22 +2,42 @@ import { json, redirect } from "@remix-run/node";
 import { useLoaderData } from "@remix-run/react";
 import { FaLayerGroup } from "react-icons/fa";
 import SpacesList from "../components/SpaceList";
+import { createCookie } from "@remix-run/node";
 
-// ---------------------------
-// Loader for /space
-// ---------------------------
+// Create cookies for access and refresh tokens
+const accessTokenCookie = createCookie("accessToken");
+const refreshTokenCookie = createCookie("refreshTokens");
+
 export async function loader({ request }) {
   const url = new URL(request.url);
 
-  // ✅ Check for OAuth redirect
+  // ✅ Check for OAuth flow
   const isOAuth = url.searchParams.get("oauth") === "true";
   const accessToken = url.searchParams.get("accessToken");
+  const refreshTokens = url.searchParams.get("refreshTokens");
 
-  // If OAuth flow, redirect to clean URL
-  if (isOAuth && accessToken) {
+  if (isOAuth && accessToken && refreshTokens) {
+    // Serialize cookies
+    const accessCookie = await accessTokenCookie.serialize(accessToken, {
+      httpOnly: true,
+      secure: true,
+      sameSite: "none", // needed for cross-domain
+      path: "/",
+      maxAge: 15 * 60, // 15 minutes
+    });
+
+    const refreshCookie = await refreshTokenCookie.serialize(refreshTokens, {
+      httpOnly: true,
+      secure: true,
+      sameSite: "none",
+      path: "/",
+      maxAge: 7 * 24 * 60 * 60, // 7 days
+    });
+
+    // ✅ Redirect to clean URL so browser sets cookies
     return redirect("/space", {
       headers: {
-        // Optionally, you can store token in a session for persistence
+        "Set-Cookie": [accessCookie, refreshCookie],
       },
     });
   }
@@ -25,38 +45,28 @@ export async function loader({ request }) {
   // ---------------------------
   // Normal loader flow: fetch spaces
   // ---------------------------
+  const cookieHeader = request.headers.get("cookie") || "";
 
-  // Access token should come from query param on first load (after OAuth)
-  // Or from a session/cookie if you persist it
-  const token = accessToken; // temporary, or replace with session storage later
-
-  if (!token) {
-    return redirect("/login");
-  }
-
-  // Fetch spaces using Authorization header (cross-domain safe)
   const res = await fetch(`${process.env.VITE_API_URL}/api/v1/users/spaces/getSpaces`, {
     method: "GET",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`, // send token to backend
+      Cookie: cookieHeader, // send stored cookies to backend
     },
+    credentials: "include",
   });
 
+  // If unauthorized, redirect to login
   if ([401, 403].includes(res.status)) {
     return redirect("/login");
   }
 
   const data = await res.json();
-  return json({ spaces: data.data.docs || [], accessToken: token });
+  return json({ spaces: data.data.docs || [] });
 }
 
-// ---------------------------
-// React Component
-// ---------------------------
 export default function Spaces() {
   const loaderData = useLoaderData();
-  const token = loaderData.accessToken; // you can store it in state/session if needed
 
   return (
     <div className="p-6 md:p-10 bg-gradient-to-br from-black via-gray-900 to-black min-h-screen space-y-14">
