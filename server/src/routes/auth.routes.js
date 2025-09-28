@@ -37,6 +37,7 @@ router.get(
         httpOnly: true,
         secure: true,         // Required for SameSite=None
         sameSite: "none",     // Allows cross-domain
+        path : "/",
         maxAge: 15 * 60 * 1000, // 15 minutes
       });
 
@@ -44,6 +45,7 @@ router.get(
         httpOnly: true,
         secure: true,
         sameSite: "none",
+        path : "/",
         maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
       });
 
