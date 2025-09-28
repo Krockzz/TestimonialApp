@@ -20,7 +20,7 @@ router.get(
   async (req, res) => {
     try {
       if (!req.user) {
-        return res.redirect(`${FRONTEND_URL}/login`);
+        return res.redirect(`${FRONTEND_URL}/space`);
       }
 
       // Generate JWT tokens
