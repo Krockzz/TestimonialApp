@@ -1,9 +1,16 @@
 import { Router } from "express";
 import passport from "passport";
 import jwt from "jsonwebtoken";
+import cors from "cors" 
 
 const router = Router();
 const FRONTEND_URL = process.env.CORS_ORIGIN || "https://testimonia-delta.vercel.app";
+
+
+router.use(cors({
+  origin: FRONTEND_URL,
+  credentials: true,
+}));
 
 // Cookie options
 const accessCookieOptions = {
