@@ -73,7 +73,7 @@ router.get(
 
 // 3️⃣ Failure route
 router.get("/failure", (req, res) => {
-  return res.redirect(`${FRONTEND_URL}/login`);
+  return res.redirect(`${FRONTEND_URL}/space`);
 });
 
 // 4️⃣ Logout
