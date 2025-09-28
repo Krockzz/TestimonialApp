@@ -19,6 +19,7 @@ console.log(cookieHeader)
     credentials: "include",
   });
 
+  console.log(response.status)
   if ([400 , 401, 403].includes(response.status)) {
     return redirect("/login");
   }
