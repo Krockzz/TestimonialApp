@@ -2,42 +2,21 @@ import { json, redirect } from "@remix-run/node";
 import { useLoaderData } from "@remix-run/react";
 import { FaLayerGroup } from "react-icons/fa";
 import SpacesList from "../components/SpaceList";
-import { createCookie } from "@remix-run/node";
 
-// Create cookies for access and refresh tokens
-const accessTokenCookie = createCookie("accessToken");
-const refreshTokenCookie = createCookie("refreshTokens");
-
+// Loader for /space route
 export async function loader({ request }) {
   const url = new URL(request.url);
 
-
+  // ✅ OAuth flow: check if redirected from Google login
   const isOAuth = url.searchParams.get("oauth") === "true";
   const accessToken = url.searchParams.get("accessToken");
-  const refreshTokens = url.searchParams.get("refreshTokens");
 
-  if (isOAuth && accessToken && refreshTokens) {
-    // Serialize cookies
-    const accessCookie = await accessTokenCookie.serialize(accessToken, {
-      httpOnly: true,
-      secure: true,
-      sameSite: "none", // needed for cross-domain
-      path: "/",
-      maxAge: 15 * 60, // 15 minutes
-    });
-
-    const refreshCookie = await refreshTokenCookie.serialize(refreshTokens, {
-      httpOnly: true,
-      secure: true,
-      sameSite: "none",
-      path: "/",
-      maxAge: 7 * 24 * 60 * 60, // 7 days
-    });
-
-    // ✅ Redirect to clean URL so browser sets cookies
+  // If OAuth, redirect to clean URL but pass token via loader
+  if (isOAuth && accessToken) {
+    // Redirect to /space without query params
     return redirect("/space", {
       headers: {
-        "Set-Cookie": [accessCookie, refreshCookie],
+        // You can pass a custom header or session if needed here
       },
     });
   }
@@ -45,28 +24,36 @@ export async function loader({ request }) {
   // ---------------------------
   // Normal loader flow: fetch spaces
   // ---------------------------
-  const cookieHeader = request.headers.get("cookie") || "";
+  // First, get token from query param (first request after OAuth) or later from somewhere else
+  let token = accessToken;
+  console.log(token)
 
+  // You could also store token in a session or secure cookie for future requests
+  if (!token) {
+    // Example: no token provided → redirect to login
+    return redirect("/login");
+  }
+
+  // Fetch spaces using Authorization header
   const res = await fetch(`${process.env.VITE_API_URL}/api/v1/users/spaces/getSpaces`, {
     method: "GET",
     headers: {
       "Content-Type": "application/json",
-      Cookie: cookieHeader, // send stored cookies to backend
+      Authorization: `Bearer ${token}`,
     },
-    credentials: "include",
   });
 
-  // If unauthorized, redirect to login
   if ([401, 403].includes(res.status)) {
     return redirect("/login");
   }
 
   const data = await res.json();
-  return json({ spaces: data.data.docs || [] });
+  return json({ spaces: data.data.docs || [], accessToken: token });
 }
 
 export default function Spaces() {
   const loaderData = useLoaderData();
+  const token = loaderData.accessToken;
 
   return (
     <div className="p-6 md:p-10 bg-gradient-to-br from-black via-gray-900 to-black min-h-screen space-y-14">
