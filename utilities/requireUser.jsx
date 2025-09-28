@@ -3,7 +3,7 @@ import { redirect } from "@remix-run/react";
 const API_URI = import.meta.env.VITE_API_URL;
 
 export async function requireUser(request) {
-  const cookieHeader = request.headers.get("cookie");
+  const cookieHeader = request.headers.get("Cookie");
 
   try {
     const response = await fetch(`${API_URI}/api/v1/users/verify`, {
