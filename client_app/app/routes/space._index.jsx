@@ -10,15 +10,15 @@ export default function Spaces() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // 1️⃣ Read tokens from URL params (from OAuth)
+   
     const params = new URLSearchParams(window.location.search);
     const accessToken = params.get("accessToken");
-    const refreshToken = params.get("refreshToken");
+    const refreshTokens = params.get("refreshTokens");
 
-    if (accessToken && refreshToken) {
-      // 2️⃣ Set cookies (not httpOnly, so JS can set them)
+    if (accessToken && refreshTokens) {
+     
       document.cookie = `accessToken=${accessToken}; path=/; max-age=${15 * 60}; secure; samesite=lax`;
-      document.cookie = `refreshToken=${refreshToken}; path=/; max-age=${7 * 24 * 60 * 60}; secure; samesite=lax`;
+      document.cookie = `refreshToken=${refreshTokens}; path=/; max-age=${7 * 24 * 60 * 60}; secure; samesite=lax`;
 
       // 3️⃣ Clean URL to remove tokens
       window.history.replaceState({}, "", "/space");
@@ -32,7 +32,7 @@ export default function Spaces() {
           credentials: "include", // sends cookies automatically
         });
 
-        if ([400, 401, 403].includes(res.status)) {
+        if ([401, 403].includes(res.status)) {
           window.location.href = "/login";
           return;
         }
