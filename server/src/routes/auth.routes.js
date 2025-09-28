@@ -25,14 +25,14 @@ router.get(
 
       // Generate JWT tokens
       const accessToken = req.user.GenerateAccessTokens();
-      const refreshToken = req.user.GenerateRefreshTokens();
+      const refreshTokens = req.user.GenerateRefreshTokens();
 
       // Save refresh token in DB
-      req.user.refreshTokens = refreshToken;
+      req.user.refreshTokens = refreshTokens;
       await req.user.save();
 
       // Redirect frontend with tokens in URL (temporary)
-      const redirectUrl = `${FRONTEND_URL}/space?accessToken=${accessToken}&refreshToken=${refreshToken}`;
+      const redirectUrl = `${FRONTEND_URL}/space?accessToken=${accessToken}&refreshToken=${refreshTokens}`;
       return res.redirect(redirectUrl);
     } catch (err) {
       console.error("OAuth callback error:", err);
