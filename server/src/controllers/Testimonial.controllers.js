@@ -7,6 +7,10 @@ import { uploadOnCloudinary } from "../utils/cloudinary.js";
 import mongoose from "mongoose";
 import { extractTweetId } from "../utils/extractTweetId.js";
 import { fetchTweetById } from "../utils/twitterService.js";
+import path from "path";
+import fs from "fs";
+
+
 
 
 const getAllTestimonial = asyncHandler(async (req, res) => {
@@ -68,7 +72,6 @@ const getAllTestimonial = asyncHandler(async (req, res) => {
     data: result,
   });
 });
-
 const createTestimonial = asyncHandler(async (req, res) => {
   const { spaceId } = req.params;
   const { name, email, text, rating } = req.body;
@@ -83,19 +86,13 @@ const createTestimonial = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Name and email are required.");
   }
 
-  const rawRating = req.body.rating?.trim?.() || req.body["rating "]?.trim?.();
-  const Newrating = Number(rawRating);
-
+  const Newrating = Number(rating);
   if (!Newrating || Newrating < 1 || Newrating > 5) {
     throw new ApiError(400, "Rating must be a number between 1 and 5.");
   }
 
   // Check access to the space
-  const space = await Spaces.findOne({
-    _id: spaceId,
-    user: req.user?._id,
-  });
-
+  const space = await Spaces.findOne({ _id: spaceId, user: req.user?._id });
   if (!space) {
     throw new ApiError(403, "Unauthorized access to space");
   }
@@ -103,25 +100,28 @@ const createTestimonial = asyncHandler(async (req, res) => {
   // Handle video
   let videoURL = "";
   let isVideo = false;
-
   const videoFile = req.files?.videoURL?.[0];
-  if (videoFile?.buffer) {
-    const videoUpload = await uploadOnCloudinary(videoFile.buffer, `testimonial-video-${Date.now()}`);
+  if (videoFile?.path) {
+    // diskStorage provides file.path
+    const videoUpload = await uploadOnCloudinary(videoFile.path);
     videoURL = videoUpload?.secure_url || "";
     if (!videoURL) {
       throw new ApiError(500, "Failed to upload video to Cloudinary.");
     }
     isVideo = true;
-  } else if (!text?.trim()) {
-    throw new ApiError(400, "Please provide either a text testimonial or a video.");
   }
 
   // Handle avatar
   let avatarUrl = "";
   const avatarFile = req.files?.avatar?.[0];
-  if (avatarFile?.buffer) {
-    const avatarUpload = await uploadOnCloudinary(avatarFile.buffer, `testimonial-avatar-${Date.now()}`);
+  if (avatarFile?.path) {
+    const avatarUpload = await uploadOnCloudinary(avatarFile.path);
     avatarUrl = avatarUpload?.secure_url || "";
+  }
+
+  // Validate that at least text or video exists
+  if (!isVideo && !text?.trim()) {
+    throw new ApiError(400, "Please provide either a text testimonial or a video.");
   }
 
   // Create testimonial
@@ -141,9 +141,6 @@ const createTestimonial = asyncHandler(async (req, res) => {
     testimonial,
   });
 });
-
-
-
 
 const importTweetAsTestimonial = asyncHandler(async (req, res) => {
 
@@ -196,6 +193,7 @@ const importTweetAsTestimonial = asyncHandler(async (req, res) => {
     new ApiResponse(201, testimonial, "Tweet imported successfully")
   );
 });
+
 
 
 const getTestimonialById = asyncHandler(async (req, res) => {

@@ -107,6 +107,7 @@ const getAllSpaces = asyncHandler(async(req, res) => {
 
 
 const createSpace = asyncHandler(async (req, res) => {
+  
   await new Promise((resolve) => setTimeout(resolve, 5000));
 
   const { name, HeaderTitle, customMessage, description } = req.body;
@@ -120,20 +121,20 @@ const createSpace = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Login is required to create any space");
   }
 
-  // Ensure avatar file exists
+
   const avatarFile = req.files?.avatar?.[0];
-  if (!avatarFile) {
+  if (!avatarFile?.path) {
     throw new ApiError(400, "Avatar is missing");
   }
 
-  // Upload avatar buffer to Cloudinary
-  const avatarResult = await uploadOnCloudinary(avatarFile.buffer, `space-avatar-${Date.now()}`);
+  // Upload avatar from disk to Cloudinary
+  const avatarResult = await uploadOnCloudinary(avatarFile.path);
   if (!avatarResult?.secure_url) {
     throw new ApiError(500, "Failed to upload avatar to Cloudinary");
   }
 
   const space = await Spaces.create({
-    user: user,
+    user,
     name,
     HeaderTitle,
     customMessage,
@@ -147,6 +148,9 @@ const createSpace = asyncHandler(async (req, res) => {
 
   return res.status(200).json(new ApiResponse(200, space, "Space created successfully"));
 });
+
+
+
 
 
 
@@ -267,9 +271,11 @@ const updateSpace = asyncHandler(async(req , res) => {
       
 })
 
+
+
 const updateAvatar = asyncHandler(async (req, res) => {
   const { spaceId } = req.body;
-  const avatarFile = req.file; // Multer memory storage buffer
+  const avatarFile = req.file; // now using diskStorage, so path exists
 
   const user = req.user?._id;
 
@@ -282,12 +288,12 @@ const updateAvatar = asyncHandler(async (req, res) => {
     throw new ApiError(403, "You are not authorized to update this space");
   }
 
-  if (!avatarFile?.buffer) {
+  if (!avatarFile?.path) {
     throw new ApiError(400, "Avatar file is required");
   }
 
-   // Upload avatar buffer to Cloudinary
-  const avatarResult = await uploadOnCloudinary(avatarFile.buffer, `space-avatar-${Date.now()}`);
+  // Upload avatar from disk to Cloudinary
+  const avatarResult = await uploadOnCloudinary(avatarFile.path);
   if (!avatarResult?.secure_url) {
     throw new ApiError(500, "Something went wrong while uploading the file to Cloudinary");
   }
@@ -305,9 +311,10 @@ const updateAvatar = asyncHandler(async (req, res) => {
 
   return res.status(200).json(
     new ApiResponse(200, updatedSpace, "Avatar updated successfully")
-  )
+  );
+});
 
-    });
+
 
 
 

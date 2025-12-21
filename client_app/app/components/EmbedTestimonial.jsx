@@ -4,9 +4,12 @@ import toast from "react-hot-toast";
 import { FaStar } from "react-icons/fa";
 
 const BORDER_COLORS = [
-  "#F97316", "#FACC15", "#6EE7B7", "#34D399",
-  "#93C5FD", "#3B82F6", "#9CA3AF", "#EC4899",
-  "#F9A8D4", "#818CF8", "#00D084"
+  "#F97316",  "#FACC15",  
+  "#6EE7B7",  
+  "#34D399",  
+  "#93C5FD",  
+  "#3B82F6","#9CA3AF","#EC4899", "#F9A8D4",  
+  "#818CF8", "#00D084", "#FF6B6B", ,"#FFFFFF", "#8E44AD",  "#FFB547", "#1F2937"
 ];
 
 const FONT_FAMILIES = [
@@ -14,8 +17,18 @@ const FONT_FAMILIES = [
   { label: "Serif", value: "serif" },
   { label: "Mono", value: "monospace" },
   { label: "Inter", value: "'Inter', sans-serif" },
-  { label: "Roboto", value: "'Roboto', sans-serif" }
+  { label: "Roboto", value: "'Roboto', sans-serif" },
+  { label: "Poppins", value: "'Poppins', sans-serif" },
+  { label: "Lato", value: "'Lato', sans-serif" },
+  { label: "Montserrat", value: "'Montserrat', sans-serif" },
+  { label: "Playfair", value: "'Playfair Display', serif" },
+  { label: "Merriweather", value: "'Merriweather', serif" },
+  { label: "Courier Prime", value: "'Courier Prime', monospace" },
+  { label: "Fira Code", value: "'Fira Code', monospace" },
+  { label: "Pacifico", value: "'Pacifico', cursive" },
+  { label: "Dancing Script", value: "'Dancing Script', cursive" }
 ];
+
 
 const BORDER_RADIUS_OPTIONS = [
   { label: "None", value: "0px" },
@@ -215,7 +228,7 @@ const iframeCode = useMemo(() => {
                 />
               ))}
               <div className="flex items-center gap-1">
-                <span className="text-sm text-gray-500">#</span>
+                <span className="text-sm text-white">#</span>
                 <input
                   type="text"
                   value={borderColor.replace("#", "")}
@@ -229,20 +242,7 @@ const iframeCode = useMemo(() => {
 
         {selectedOption === "background" && (
           <div className="mb-6">
-            <label className="block text-sm font-semibold mb-2 text-gray-800">Preview Background Color</label>
-            <div className="flex flex-wrap gap-2 mb-4">
-              {BORDER_COLORS.map((color) => (
-                <div
-                  key={color}
-                  className="w-8 h-8 rounded-md cursor-pointer border-2"
-                  style={{
-                    backgroundColor: color,
-                    borderColor: backgroundColor === color ? "#000" : "transparent",
-                  }}
-                  onClick={() => setBackgroundColor(color)}
-                />
-              ))}
-            </div>
+      
 
             <label className="block text-sm font-semibold mb-2 text-gray-800">Card Background Color</label>
             <div className="flex flex-wrap gap-2">

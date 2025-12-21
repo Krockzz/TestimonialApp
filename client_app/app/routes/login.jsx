@@ -4,10 +4,7 @@ import LoginForm from "../components/LoginForm.jsx";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
-
-
-
-export async function action({ request }) {
+  export async function action({ request }) {
   const data = await request.formData();
   const email = data.get("email");
   const password = data.get("password");
@@ -35,7 +32,7 @@ export async function action({ request }) {
     // Extracting  cookies from backend response headers
   const cookies = res.headers.get("Set-Cookie");
 
-    return redirect("https://testimonia-delta.vercel.app/space" ,
+    return redirect("/space" ,
       
       {
         headers:{

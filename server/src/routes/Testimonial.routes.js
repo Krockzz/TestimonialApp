@@ -7,7 +7,7 @@ import { upload } from "../middlewares/multer.middleware.js";
 const router = Router()
 
 // router.route("/get-Testimonial/:spaceId").get(verifyJwt , getAllTestimonial)
-router.route("/create-Testimonial/:spaceId").post(verifyJwt , upload.fields(
+router.route("/create-Testimonial/:spaceId").post( verifyJwt ,upload.fields(
     [
         {
             name: "videoURL",

@@ -3,24 +3,44 @@ import { Strategy as GoogleStrategy } from "passport-google-oauth20";
 import { User } from "../models/User.models.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
 import fetch from "node-fetch";
+import fs from "fs";
+import path from "path";
+import os from "os"
 
-// Utility to download Google avatar and upload to Cloudinary
+
 const downloadAndUploadGoogleAvatar = async (url) => {
   try {
-    console.log(`So the url is: ${url}`)
-    const response = await fetch(url);
-    console.log(response)
-    const arrayBuffer = await response.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
+    if (!url) return null;
 
-    const uploadResult = await uploadOnCloudinary(buffer, `google-avatar-${Date.now()}`);
-    console.log(uploadResult.secure_url)
-    return uploadResult?.secure_url || null;
+    // Generate temporary file path
+    const fileName = `google-avatar-${Date.now()}.jpg`;
+    const filePath = path.join(os.tmpdir() , fileName); // or any temp folder you prefer
+
+    // Download the image and save to disk
+    const response = await fetch(url);
+    if (!response.ok) throw new Error(`Failed to fetch image: ${response.statusText}`);
+
+    const fileStream = fs.createWriteStream(filePath);
+    await new Promise((resolve, reject) => {
+      response.body.pipe(fileStream);
+      response.body.on("error", reject);
+      fileStream.on("finish", resolve);
+    });
+
+    // Upload to Cloudinary using your function (it deletes the file automatically)
+    const uploadResult = await uploadOnCloudinary(filePath);
+    if (!uploadResult?.secure_url) throw new Error("Failed to upload avatar to Cloudinary");
+
+    return uploadResult.secure_url;
   } catch (err) {
-    console.log("Error downloading/uploading Google avatar:", err);
+    console.error("Error downloading/uploading Google avatar:", err);
     return null;
   }
 };
+
+// export { downloadAndUploadGoogleAvatar };
+
+
 
 
 

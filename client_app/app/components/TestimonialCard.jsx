@@ -1,11 +1,15 @@
 import { format } from "date-fns";
 import { useState, useRef, useEffect } from "react";
+
+
 import {
   ChevronUp,
   Trash2,
   Download,
   Share2,
-  Code2
+  Code2,
+  // LucideNetwork,
+  Network
 } from "lucide-react";
 import { FaXTwitter } from "react-icons/fa6";
 import { FaLinkedin } from "react-icons/fa";
@@ -19,13 +23,22 @@ import ShareOnXModal from "./ShareOnXModal";
 import ShareOnLinkedInModal from "./ShareOnInModal";
 import Lottie from "lottie-react";
 import Creating from "../../../utilities/Manufacturing (1).json"
+import Loading from "../../../utilities/Loading.json"
 import { FaStar } from "react-icons/fa";
+import { MdSummarize,  MdOutlineSentimentVerySatisfied,
+  MdOutlineSentimentNeutral, MdOutlineSentimentDissatisfied
+   } from "react-icons/md";
 
-export default function TestimonialCard({ testimonial, avatar, spaceId }) {
+
+
+
+
+export default function TestimonialCard({ testimonial, avatar, spaceId}) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [testimonialToDelete, setTestimonialToDelete] = useState(null);
-  const [OpenMenuId, setOpenMenuId] = useState(null);
+  const [OpenMenuId_Share, setOpenMenuId_Share] = useState(null);
+  const[OpenMenuId_AI , setOpenMenuId_AI] = useState(null)
   const [showVideoPlayer, setShowVideoPlayer] = useState(false);
   const [showEmbedForm, setShowEmbedForm] = useState(false);
   const [showPublicLink, setShowPublicLink] = useState(false);
@@ -35,17 +48,36 @@ export default function TestimonialCard({ testimonial, avatar, spaceId }) {
   const [loadingShareComponent, setLoadingShareComponent] = useState(false);
   const [showShareOnXModal, setShowShareOnXModal] = useState(false);
   const [showShareOnInModal , setShowShareOnInModal] = useState(false)
+  const [localSentiment, setLocalSentiment] = useState(null);
+  const [isAnalyzingSentiment, setIsAnalyzingSentiment] = useState(false);
+  const [hasAnalyzedSentiment, setHasAnalyzedSentiment] = useState(false);
+
+
+
+
+
+  
 
   const videoRef = useRef(null);
   const submit = useSubmit();
   const isVideo = Boolean(testimonial.videoURL);
   console.log(isVideo)
+  console.log(testimonial._id)
+  
+const API_URI = import.meta.env.VITE_API_URL;
 
   const toggleExpand = () => setIsExpanded((prev) => !prev);
 
   const toogleMenuId = (id) => {
-    setOpenMenuId(OpenMenuId === id ? null : id);
+    setOpenMenuId_Share(OpenMenuId_Share === id ? null : id);
   };
+
+  const toogleMenuId_AI = (id) => {
+    setOpenMenuId_AI(OpenMenuId_AI === id ? null : id);
+  };
+
+  
+
 
   const handleDeleteClick = (id) => {
     setTestimonialToDelete(id);
@@ -182,6 +214,12 @@ export default function TestimonialCard({ testimonial, avatar, spaceId }) {
     }
   }, [loadingPublicLink]);
 
+
+
+
+
+
+
   const handleShareX = (platform) => {
     if (platform === "X") {
       setSharingPlatform(platform);
@@ -205,18 +243,71 @@ export default function TestimonialCard({ testimonial, avatar, spaceId }) {
     }
   }
 
+  const getSentimentIcon = () => {
+  if (!localSentiment) return null;
+
+  switch (localSentiment.label) {
+    case "POSITIVE":
+      return (
+        <div className="flex items-center gap-1 bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm shadow">
+          <MdOutlineSentimentVerySatisfied size={30} />
+          Positive
+        </div>
+      );
+
+    case "NEGATIVE":
+      return (
+        <div className="flex items-center gap-1 bg-red-100 text-red-700 px-3 py-1 rounded-full text-sm shadow">
+          <MdOutlineSentimentDissatisfied size={30} />
+          Negative
+        </div>
+      );
+
+    default:
+      return (
+        <div className="flex items-center gap-1 bg-yellow-100 text-yellow-700 px-3 py-1 rounded-full text-sm shadow">
+          <MdOutlineSentimentNeutral size={20} />
+          Neutral
+        </div>
+      );
+  }
+};
+
+
+
+  
+
   return (
     <>
       <div className="relative bg-gray-900 text-white rounded-xl shadow-lg p-7 w-[900px] ml-auto mr-6 mb-10">
-        <div
-          className={`absolute top-4 left-4 text-[16px] font-bold px-7 py-1 rounded-2xl ${
-            isVideo
-              ? "bg-yellow-200 text-orange-400"
-              : "bg-blue-200 text-blue-500"
-          } shadow-lg`}
-        >
-          {isVideo ? "Video" : "Text"}
-        </div>
+     <div
+  className={`absolute top-4 left-4 text-[16px] font-bold px-7 py-1 rounded-2xl ${
+    isVideo
+      ? "bg-yellow-200 text-orange-400"
+      : "bg-blue-200 text-blue-500"
+  } shadow-lg`}
+>
+  {isVideo ? "Video" : "Text"}
+</div>
+
+{isAnalyzingSentiment && (
+  <div className="absolute top-4 right-4">
+    <div className="flex items-center gap-2 bg-gray-100 text-gray-700 px-4 py-1 rounded-full text-sm shadow">
+      <span className="animate-pulse">Analyzing...</span>
+    </div>
+  </div>
+)}
+
+
+{hasAnalyzedSentiment && localSentiment && !isAnalyzingSentiment && (
+  <div className="absolute top-4 right-4 animate-fade-in scale-95">
+    {getSentimentIcon()}
+  </div>
+)}
+
+
+
+
 
         <div className="mt-11 mb-3 flex items-center justify-start gap-1.5 pl-1">
           {[...Array(5)].map((_, i) => (
@@ -304,6 +395,62 @@ export default function TestimonialCard({ testimonial, avatar, spaceId }) {
         {isExpanded && (
           <div className="mt-6 flex justify-end space-x-2 pr-2 py-4 bg-gray-900 rounded-b-xl transition-all duration-700">
             <div className="relative inline-block">
+             <button
+             onClick={() => toogleMenuId_AI(testimonial._id) }
+              className="flex items-center gap-1 hover:bg-gray-700 text-sm px-4 py-2 rounded-md"
+              >
+                <Network className="w-4 h-4"/>AI features
+              </button>
+
+
+               {OpenMenuId_AI === testimonial._id && (
+                <div className="absolute top-full right-0 mt-2 bg-white text-gray-900 rounded-xl shadow-lg p-3 z-10 min-w-[200px] space-y-2 w-[250px]">
+        <button
+  className="flex items-center gap-3 px-4 py-2 hover:bg-gray-200 text-sm w-full text-left rounded-md"
+  onClick={async () => {
+    if (hasAnalyzedSentiment) return;
+
+    setIsAnalyzingSentiment(true);
+
+    try {
+      await new Promise((r) => setTimeout(r, 5000)); 
+      setLocalSentiment(testimonial.sentiment);
+
+      setHasAnalyzedSentiment(true);
+    } catch (err) {
+      console.error("Sentiment analysis failed", err);
+    } finally {
+      setIsAnalyzingSentiment(false);
+      setOpenMenuId_AI(null);
+    }
+  }}
+>
+  <MdOutlineSentimentVerySatisfied className="w-5 h-5 text-gray-400" />
+  Sentiment Analysis
+</button>
+
+
+
+
+
+
+                  <button
+                    className="flex items-center gap-3 px-4 py-2 hover:bg-gray-200 text-sm w-full text-left rounded-md"
+                    onClick={() => {
+                      // setShowEmbedForm(true);
+                      setOpenMenuId_Share(null);
+                    }}
+                  >
+                    <MdSummarize className="w-5 h-5 text-gray-400" /> Text summarization
+                  </button>
+
+                 
+                </div>
+              )}
+
+              </div>
+            <div className="relative inline-block">
+             
               <button
                 onClick={() => toogleMenuId(testimonial._id)}
                 className="flex items-center gap-1 hover:bg-gray-700 text-sm px-4 py-2 rounded-md"
@@ -311,13 +458,13 @@ export default function TestimonialCard({ testimonial, avatar, spaceId }) {
                 <Share2 className="w-4 h-4" /> Share
               </button>
 
-              {OpenMenuId === testimonial._id && (
+              {OpenMenuId_Share === testimonial._id && (
                 <div className="absolute top-full right-0 mt-2 bg-white text-gray-900 rounded-xl shadow-lg p-3 z-10 min-w-[200px] space-y-2 w-[250px]">
                   <button
                     className="flex items-center gap-3 px-4 py-2 hover:bg-gray-200 text-sm w-full text-left rounded-md"
                     onClick={() => {
                       setLoadingPublicLink(true);
-                      setOpenMenuId(null);
+                      setOpenMenuId_Share(null);
                     }}
                   >
                     <IoIosLink className="w-5 h-5 text-gray-400" /> Get the link
@@ -327,7 +474,7 @@ export default function TestimonialCard({ testimonial, avatar, spaceId }) {
                     className="flex items-center gap-3 px-4 py-2 hover:bg-gray-200 text-sm w-full text-left rounded-md"
                     onClick={() => {
                       setShowEmbedForm(true);
-                      setOpenMenuId(null);
+                      setOpenMenuId_Share(null);
                     }}
                   >
                     <Code2 className="w-5 h-5 text-gray-400" /> Embed the testimonial

@@ -6,6 +6,7 @@ import { useLoaderData } from "@remix-run/react";
 import { json } from "@remix-run/react";
 
 export async function loader(request){
+  
   try{
     const user = await requireUser(request);
     return json({isAuthenticated: true})

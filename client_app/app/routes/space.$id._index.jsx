@@ -45,9 +45,11 @@ export async function loader({ request, params }) {
   const docs = TestimonialData.data.docs
 
   const customerTestimonials = docs.filter(t => t.sourceType !== "twitter")
+  console.log("this is it" ,customerTestimonials)
   const twitterTestimonials = docs.filter(t=> t.sourceType === "twitter")
 
-  console.log(twitterTestimonials)
+  // console.log(twitterTestimonials)
+  console.log("This is the customer testimonials" , customerTestimonials)
 
 
   return json({ spaceData, customerTestimonials , twitterTestimonials });

@@ -51,10 +51,16 @@ export default function Footer() {
           <p className="text-sm text-gray-500">
             &copy; 2025 <span className="text-blue-400 font-medium">YourCompany</span>. All rights reserved.
           </p>
-        </div>
+        </div> 
       </div>
+ 
+    <div className="flex , space-x-5 , p-2">
+     <iframe src="http://localhost:5173/69033653498641a3be5e84e1/embed?borderColor=%239CA3AF&borderWidth=8&borderRadius=20px&textColor=%233B82F6&fontFamily=serif&designStyle=center&cardColor=%231F2937&backgroundColor=%23ffffff" width="400" height="300" style={{border: "none"}} loading="lazy"></iframe>
 
-  <iframe src="https://testimonia-delta.vercel.app/687daa370b7cc2c916311cc9/embed?borderColor=%233B82F6&borderWidth=30&borderRadius=0px&textColor=%23000000&fontFamily=sans-serif&designStyle=left&cardColor=%23ffffff&backgroundColor=%23ffffff" width="600" height="350" style={{border: "none"}} loading="lazy"></iframe>
+    </div>
+
+
+      
 
    
 

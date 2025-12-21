@@ -39,41 +39,14 @@ export const loader = async ({ request, params }) => {
   }
 };
 
+
+
 export default function EmbedTestimonialPage() {
   const { result } = useLoaderData();
   const testimonial = result.data;
   const [searchParams] = useSearchParams();
   const wrapperRef = useRef(null);
-
-  // Dynamically calculate and apply scaling
-  useEffect(() => {
-    const wrapper = wrapperRef.current;
-
-    function scaleContent() {
-      if (!wrapper) return;
-
-      const parentWidth = wrapper.offsetWidth;
-      const parentHeight = wrapper.offsetHeight;
-
-      const baseWidth = 600; // Default design width
-      const baseHeight = 350; // Default design height
-
-      // Calculate scale for both dimensions
-      const scaleX = parentWidth / baseWidth;
-      const scaleY = parentHeight / baseHeight;
-
-      // Use the smaller scale so nothing overflows
-      const scale = Math.min(scaleX, scaleY);
-
-      wrapper.style.transform = `scale(${scale})`;
-    }
-
-    // Run on load and whenever the window resizes
-    scaleContent();
-    window.addEventListener("resize", scaleContent);
-
-    return () => window.removeEventListener("resize", scaleContent);
-  }, []);
+  const containerRef = useRef(null);
 
   // Design customization
   const design = useMemo(() => {
@@ -89,36 +62,39 @@ export default function EmbedTestimonialPage() {
     };
   }, [searchParams]);
 
+  // Dynamically scale container
+ 
+
+
+
+
   return (
     <div
-      className="w-screen h-screen flex items-center justify-center overflow-hidden bg-white"
+      ref={containerRef}
+      className="flex items-center justify-center w-screen h-screen rounded-[${borderRadius}] bg-white overflow-hidden"
       style={{
         fontFamily: design.fontFamily,
         color: design.textColor,
+        borderRadius : design.borderRadius
       }}
     >
-      {/* Scaling container */}
-      <div
-        className="relative"
-        ref={wrapperRef}
-        style={{
-          width: "100%",
-          height: "100%",
-          transformOrigin: "top left",
-        }}
+      {/* Scaled wrapper */}
+      <div ref={wrapperRef} className="relative w-full h-full"
+      style={{
+    transformOrigin: "top left",
+  }}
       >
-        {/* Fixed base size for scaling */}
         <div
           style={{
-            width: "600px",
-            height: "350px",
-            border: `${design.borderWidth}px solid ${design.borderColor}`,
-            borderRadius: design.borderRadius,
-            padding: "24px",
-            backgroundColor: design.cardColor,
-            boxSizing: "border-box",
-            position: "relative",
-          }}
+      width: "100%",
+      height: "100%",
+      border: `${design.borderWidth}px solid ${design.borderColor}`,
+      borderRadius: design.borderRadius,
+      padding: "24px",
+      backgroundColor: design.cardColor,
+      boxSizing: "border-box",
+      position: "relative",
+    }}
         >
           {/* Watermark */}
           <div

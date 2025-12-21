@@ -9,7 +9,7 @@ const TestimonialSchema = new Schema(
       required: true
     },
 
-    // For customer-uploaded testimonials
+    // Customer-uploaded testimonial
     name: {
       type: String,
       trim: true,
@@ -26,7 +26,7 @@ const TestimonialSchema = new Schema(
     },
 
     videoURL: {
-      type: String, // Cloudinary video
+      type: String, // Cloudinary video for customer-uploaded content
     },
 
     avatar: {
@@ -58,7 +58,18 @@ const TestimonialSchema = new Schema(
       twitterHandle: { type: String }, // e.g. @elonmusk
       twitterName: { type: String }, // Full display name
       likeCount: { type: Number }, // Twitter like count
-      originalTweetUrl: { type: String } // Full tweet URL
+      originalTweetUrl: { type: String }, // Full tweet URL
+      media: [
+        {
+          type: {
+            type: String,
+            enum: ["photo", "video", "animated_gif"],
+          },
+          url: { type: String }, // direct URL to image or video variant
+          previewImageUrl: { type: String }, // for videos/GIFs (optional)
+          durationMs: { type: Number }, // for videos/GIFs (optional)
+        }
+      ]
     },
 
     // Identify where the testimonial came from
@@ -75,3 +86,4 @@ const TestimonialSchema = new Schema(
 TestimonialSchema.plugin(mongooseAggregatePaginate);
 
 export const Testimonial = mongoose.model("Testimonial", TestimonialSchema);
+

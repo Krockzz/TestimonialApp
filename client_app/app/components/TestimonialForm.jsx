@@ -1,25 +1,30 @@
 import { useState, useEffect, useRef } from "react";
 import { FaStar } from "react-icons/fa";
 import { motion, AnimatePresence } from "framer-motion";
-import { Form } from "@remix-run/react";
 import Lottie from "lottie-react";
 import Uploading from "../../../utilities/Uploading.json";
 
-export default function TestimonialForm({
-  space,
-  rating,
-  setRating,
-  onClose,
-  testimonialType,
-}) {
+export default function TestimonialForm({ space, rating, setRating, onClose, testimonialType }) {
   const [hover, setHover] = useState(null);
   const [submitted, setSubmitted] = useState(false);
-  const [formStarted, setFormStarted] = useState(false);
-  const [videoPreview, setVideoPreview] = useState(null);
   const [uploading, setUploading] = useState(false);
+  const [videoPreview, setVideoPreview] = useState(null);
+  const [recording, setRecording] = useState(false);
+  const [recordedVideoBlob, setRecordedVideoBlob] = useState(null);
+  const [uploadedVideoFile, setUploadedVideoFile] = useState(null);
   const [avatarPreview, setAvatarPreview] = useState(null);
-  const avatarInputRef = useRef(null);
+  const [recordingTime, setRecordingTime] = useState(0);
+
+
+  const timerRef = useRef(null);
+  const videoPreviewRef = useRef(null);
+  const mediaRecorderRef = useRef(null);
+  const recordedChunksRef = useRef([]);
+  const videoStreamRef = useRef(null);
   const fileInputRef = useRef(null);
+  const avatarInputRef = useRef(null);
+
+  const spaceId = space._id;
 
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -29,11 +34,133 @@ export default function TestimonialForm({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [onClose]);
 
-  const spaceId = space._id;
+  // Start recording
+const startRecording = async () => {
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+    videoStreamRef.current = stream;
+
+    const options = { mimeType: "video/webm; codecs=vp8,opus" };
+    const mediaRecorder = new MediaRecorder(stream, options);
+    mediaRecorderRef.current = mediaRecorder;
+    recordedChunksRef.current = [];
+
+    mediaRecorder.ondataavailable = (event) => {
+      if (event.data && event.data.size > 0) recordedChunksRef.current.push(event.data);
+    };
+
+    mediaRecorder.onstop = () => {
+      const blob = new Blob(recordedChunksRef.current, { type: "video/webm" });
+      setRecordedVideoBlob(blob);
+      setVideoPreview(URL.createObjectURL(blob));
+      setUploadedVideoFile(null);
+
+      // stop stream + timer
+      stream.getTracks().forEach((track) => track.stop());
+      clearInterval(timerRef.current);
+      setRecordingTime(0);
+
+      setRecording(false);
+    };
+
+    mediaRecorder.start();
+    setRecording(true);
+
+    // Start timer
+    setRecordingTime(0);
+    timerRef.current = setInterval(() => {
+      setRecordingTime((prev) => prev + 1);
+    }, 1000);
+  } catch (err) {
+    console.error("Camera access error:", err);
+    alert("Cannot access camera. Please allow permission.");
+  }
+};
+
+
+
+
+
+ const stopRecording = () => {
+  if (mediaRecorderRef.current && recording) {
+    mediaRecorderRef.current.stop();
+    clearInterval(timerRef.current);
+  }
+};
+
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    const file = e.dataTransfer.files[0];
+    if (file && file.type.startsWith("video/")) {
+      setUploadedVideoFile(file);
+      setVideoPreview(URL.createObjectURL(file));
+      setRecordedVideoBlob(null);
+    }
+  };
+
+  const handleDragOver = (e) => e.preventDefault();
+
+ const handleSubmit = async (e) => {
+  e.preventDefault();
+  setUploading(true);
+
+  const startTime = Date.now();
+  const formData = new FormData(e.target);
+
+  if (recordedVideoBlob) {
+    const videoFile = new File([recordedVideoBlob], `testimonial-${Date.now()}.webm`, { type: "video/webm" });
+    formData.append("videoURL", videoFile);
+  } else if (uploadedVideoFile) {
+    formData.append("videoURL", uploadedVideoFile);
+  }
+
+  if (avatarInputRef.current?.files[0]) {
+    formData.append("avatar", avatarInputRef.current.files[0]);
+  }
+
+  try {
+    const response = await fetch(`/${spaceId}`, {
+      method: "POST",
+      body: formData,
+      credentials: "include",
+    });
+
+    const elapsed = Date.now() - startTime;
+    const remaining = Math.max(0, 5000 - elapsed); // ensure at least 5s
+    await new Promise((resolve) => setTimeout(resolve, remaining));
+
+    if (response.ok) {
+      setSubmitted(true);
+    } else {
+      const error = await response.json().catch(() => ({}));
+      alert(error.message || "Failed to submit testimonial");
+    }
+  } catch (err) {
+    console.error(err);
+    alert("Something went wrong. Check console for details.");
+  } finally {
+    setUploading(false);
+  }
+};
+
+
+  
+useEffect(() => {
+  if (recording && videoStreamRef.current && videoPreviewRef.current) {
+    videoPreviewRef.current.srcObject = videoStreamRef.current;
+    videoPreviewRef.current.muted = true;
+    videoPreviewRef.current.playsInline = true;
+    videoPreviewRef.current
+      .play()
+      .catch((err) => console.error("Video play error:", err));
+  }
+}, [recording]);
+
 
   return (
     <AnimatePresence>
-      <motion.div
+       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
@@ -70,6 +197,18 @@ export default function TestimonialForm({
                 Close
               </button>
             </div>
+          )  : submitted ? (
+            <div className="text-center py-10 space-y-3">
+              <div className="text-5xl">🎉</div>
+              <h3 className="text-xl font-semibold text-gray-800">Thank you for your testimonial!</h3>
+              <p className="text-gray-600">We appreciate your feedback. 🙌</p>
+              <button
+                onClick={onClose}
+                className="mt-6 px-6 py-2 bg-blue-600 text-white rounded-xl shadow hover:bg-blue-700 transition"
+              >
+                Close
+              </button>
+            </div>
           ) : (
             <>
               <h2 className="text-xl font-bold text-gray-800 mb-6">
@@ -77,35 +216,15 @@ export default function TestimonialForm({
                   ? "Write Text Testimonial To"
                   : "Upload Video Testimonial For"}
               </h2>
-
               <div className="flex justify-start mb-4">
                 <img
                   src={space.avatar}
                   alt={space.name}
-                  className="w-20 h-20 rounded-full object-cover border-2 border-blue-600 shadow"
+                  className="w-20 h-20 rounded-full object-cover border-2 border-blue-600 shadow-lg"
                 />
               </div>
 
-              <div className="mb-6 space-y-2 text-gray-700 text-sm">
-                <p><strong>Who are you</strong> / what are you working on?</p>
-                <p>How has <strong>[our product/service]</strong> helped you?</p>
-                <p>What is the best thing about <strong>[our product/service]</strong>?</p>
-              </div>
-
-              <Form
-                method="post"
-                encType="multipart/form-data"
-                className="space-y-6"
-                onSubmit={() => {
-                  setFormStarted(true);
-                  setUploading(true);
-
-                  setTimeout(() => {
-                    setUploading(false);
-                    setSubmitted(true);
-                  }, 10000);
-                }}
-              >
+              <form onSubmit={handleSubmit} encType="multipart/form-data" className="space-y-6">
                 <input type="hidden" name="spaceId" value={spaceId} />
                 <input type="hidden" name="type" value={testimonialType} />
                 <input type="hidden" name="rating" value={rating || ""} />
@@ -114,7 +233,7 @@ export default function TestimonialForm({
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-1">Your Rating</label>
                   <div className="flex items-center space-x-1">
-                    {[...Array(5)].map(( _, index) => {
+                    {[...Array(5)].map((_, index) => {
                       const starValue = index + 1;
                       return (
                         <label key={index}>
@@ -126,7 +245,7 @@ export default function TestimonialForm({
                           />
                           <FaStar
                             size={24}
-                            className="cursor-pointer transition"
+                            className="cursor-pointer transition-transform duration-200 hover:scale-110"
                             color={starValue <= (hover || rating) ? "#facc15" : "#e5e7eb"}
                             onMouseEnter={() => setHover(starValue)}
                             onMouseLeave={() => setHover(null)}
@@ -137,67 +256,84 @@ export default function TestimonialForm({
                   </div>
                 </div>
 
-                {/* Text or Video */}
+                {/* Textarea or Video */}
                 {testimonialType === "text" ? (
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-1">
-                      Your Testimonial <span className="text-red-500">*</span>
-                    </label>
-                    <textarea
-                      name="text"
-                      required
-                      className="w-full p-3 border rounded-md resize-none bg-white placeholder-gray-400"
-                      rows={4}
-                      placeholder="Write your testimonial here..."
-                    ></textarea>
-                  </div>
+                  <textarea
+                    name="text"
+                    required
+                    className="w-full p-4 border rounded-xl bg-gray-50 placeholder-gray-400 resize-none shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                    rows={4}
+                    placeholder="Write your testimonial here..."
+                  />
                 ) : (
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Upload Video <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      id="video-upload"
-                      type="file"
-                      name="videoURL"
-                      accept="video/*"
-                      required={!videoPreview}
-                      className="hidden"
-                      ref={fileInputRef}
-                      onChange={(e) => {
-                        const file = e.target.files[0];
-                        if (file) {
-                          setVideoPreview(URL.createObjectURL(file));
-                          document.getElementById("video-file-name").textContent = file.name;
-                        }
-                      }}
-                    />
-                    {!videoPreview ? (
+                    {!videoPreview && !recording && (
                       <div
-                        onClick={() => fileInputRef.current?.click()}
-                        className="relative border-2 border-dashed border-gray-300 rounded-lg p-6 text-center transition hover:border-blue-400 hover:bg-blue-50 cursor-pointer"
+                        onDrop={handleDrop}
+                        onDragOver={handleDragOver}
+                        className="flex gap-4"
                       >
-                        <div className="flex flex-col items-center justify-center space-y-2 pointer-events-none">
-                          <svg className="w-10 h-10 text-blue-600" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5V8.25C3 7.01 4.007 6 5.25 6h13.5C19.993 6 21 7.007 21 8.25v8.25m-9 3l-3-3m0 0l3-3m-3 3h6" />
-                          </svg>
-                          <p className="text-sm text-gray-600"><span className="font-medium">Click to upload</span> or drag and drop</p>
-                          <p id="video-file-name" className="text-xs text-gray-500">No file selected</p>
+                        <div
+                          onClick={() => fileInputRef.current?.click()}
+                          className="flex-1 border-2 border-dashed border-gray-300 rounded-xl p-6 text-center cursor-pointer hover:border-blue-400 hover:bg-blue-50 shadow-md transition"
+                        >
+                          <p>Click to upload or drag & drop</p>
+                          <p className="text-xs text-gray-500">{uploadedVideoFile?.name || "No file selected"}</p>
+                        </div>
+                        <div
+                          onClick={startRecording}
+                          className="flex-1 border-2 border-dashed border-green-500 rounded-xl p-6 text-center cursor-pointer hover:bg-green-50 hover:border-green-600 shadow-md transition"
+                        >
+                          <p>🎥 Record from Camera</p>
                         </div>
                       </div>
-                    ) : (
-                      <div className="space-y-2">
-                        <label className="block text-sm font-semibold text-gray-700">Uploaded Video</label>
+                    )}
+
+             {recording && (
+  <div className="space-y-2 mt-3 w-full flex flex-col items-center">
+    {/* Recording indicator */}
+    <div className="flex items-center gap-2 mb-2">
+      <span className="w-3 h-3 bg-red-600 rounded-full animate-pulse"></span>
+      <span className="font-mono text-sm text-red-600">
+        {String(Math.floor(recordingTime / 60)).padStart(2, "0")}:
+        {String(recordingTime % 60).padStart(2, "0")}
+      </span>
+    </div>
+
+    <video
+      ref={videoPreviewRef}
+      autoPlay
+      playsInline
+      muted
+      className="w-full max-w-xl h-[400px] rounded-md shadow-md object-cover border-2 border-gray-300 bg-black"
+    />
+
+    <button
+      type="button"
+      onClick={stopRecording}
+      className="px-4 py-2 mt-2 bg-red-600 text-white rounded-md hover:bg-red-700"
+    >
+      ⏹ Stop Recording
+    </button>
+  </div>
+)}
+
+
+
+
+                    {videoPreview && !recording && (
+                      <div className="space-y-2 mt-4">
                         <video
                           controls
                           src={videoPreview}
-                          className="w-full h-auto max-h-[400px] rounded-md shadow-md object-contain"
+                          className="w-full h-auto max-h-[400px] rounded-xl shadow-lg object-contain"
                         />
                         <button
                           type="button"
                           onClick={() => {
                             setVideoPreview(null);
-                            document.getElementById("video-upload").value = "";
+                            setRecordedVideoBlob(null);
+                            setUploadedVideoFile(null);
                           }}
                           className="text-sm text-red-600 hover:underline"
                         >
@@ -205,9 +341,25 @@ export default function TestimonialForm({
                         </button>
                       </div>
                     )}
+
+                    <input
+                      type="file"
+                      accept="video/*"
+                      ref={fileInputRef}
+                      className="hidden"
+                      onChange={(e) => {
+                        const file = e.target.files[0];
+                        if (file) {
+                          setUploadedVideoFile(file);
+                          setVideoPreview(URL.createObjectURL(file));
+                          setRecordedVideoBlob(null);
+                        }
+                      }}
+                    />
                   </div>
                 )}
 
+                
                 {/* Name */}
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-1">
@@ -234,8 +386,8 @@ export default function TestimonialForm({
                   />
                 </div>
 
-                {/* Avatar Upload */}
-                <div>
+                {/* Avatar */}
+                  <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
                     Upload Avatar <span className="text-gray-400 text-sm">(optional)</span>
                   </label>
@@ -289,23 +441,24 @@ export default function TestimonialForm({
                   />
                 </div>
 
+
                 {/* Buttons */}
                 <div className="flex justify-end gap-4 pt-4">
                   <button
                     type="button"
                     onClick={onClose}
-                    className="px-4 py-2 text-gray-600 hover:text-gray-800 hover:underline"
+                    className="px-5 py-2 text-gray-600 hover:text-gray-800 hover:underline transition"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
-                    className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 flex items-center justify-center min-w-[100px]"
+                    className="px-6 py-2 bg-blue-600 text-white rounded-xl shadow hover:bg-blue-700 transition flex items-center justify-center min-w-[100px]"
                   >
                     Send
                   </button>
                 </div>
-              </Form>
+              </form>
             </>
           )}
         </motion.div>

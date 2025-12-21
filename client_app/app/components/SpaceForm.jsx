@@ -60,7 +60,7 @@ export default function SpaceForm({
                   defaultValue={initialData.name || ""}
                   required
                   className="w-full px-4 py-2.5 bg-gray-800 border border-gray-700 rounded-md text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-600"
-                  placeholder="e.g. Krunal's Space"
+                  placeholder="e.g. Mike's Space"
                 />
               </div>
 

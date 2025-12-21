@@ -14,24 +14,25 @@ export async function loader({ request }) {
     method: "GET",
     headers: {
       "Content-Type": "application/json",
-      Cookie: cookieHeader, // send stored cookies to backend
+      Cookie: cookieHeader, 
     },
     credentials: "include",
   });
 
   // If unauthorized, redirect to login
-  if ([401, 403].includes(res.status)) {
+  if ([400 , 401, 403].includes(res.status)) {
     return redirect("/login");
   }
 
   const data = await res.json();
+  console.log(data)
   
   return json({ data });
 }
 
 export default function Spaces() {
   const {data} = useLoaderData();
-  const space = data.data
+  const space = data.data.docs
 
   return (
     <div className="p-6 md:p-10 bg-gradient-to-br from-black via-gray-900 to-black min-h-screen space-y-14">
