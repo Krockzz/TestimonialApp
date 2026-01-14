@@ -56,9 +56,7 @@ export async function action({ request }) {
     return json({ message: "Please provide either a text or video testimonial.", status: 400 }, { status: 400 });
   }
 
-  if (hasText && hasVideo) {
-    return json({ message: "Please provide either text or video — not both.", status: 400 }, { status: 400 });
-  }
+ 
 
   // Prepare payload
   const payload = new FormData();
@@ -132,16 +130,15 @@ export default function SpacePublicPage() {
           />
         </motion.div>
 
-        {/* Title & Header */}
+       
         <div>
           <h1 className="text-2xl md:text-3xl font-extrabold mb-1">{space.name}</h1>
           <p className="text-gray-600 text-sm md:text-base">{space.HeaderTitle}</p>
         </div>
 
-        {/* Description */}
+  
         {space.description && <p className="text-gray-500 text-sm md:text-base px-2">{space.description}</p>}
 
-        {/* Questions */}
         <div className="text-left mt-6 space-y-4">
           <h2 className="text-[25px] font-extrabold text-gray-800">Questions</h2>
           <ul className="list-disc list-inside text-sm text-gray-600 space-y-2">
@@ -157,7 +154,6 @@ export default function SpacePublicPage() {
           </ul>
         </div>
 
-        {/* Buttons */}
         <div className="flex flex-col sm:flex-row justify-center items-center gap-4 mt-6">
           <button
             onClick={() => {

@@ -7,10 +7,9 @@ import { uploadOnCloudinary } from "../utils/cloudinary.js";
 import mongoose from "mongoose";
 import { extractTweetId } from "../utils/extractTweetId.js";
 import { fetchTweetById } from "../utils/twitterService.js";
-import path from "path";
-import fs from "fs";
-
-
+import { analyzeSentiment } from "../utils/sentiment.js";
+import {detectSpam} from "../utils/spamDetector.js"
+import { generateEmailToken , sendVerificationEmail } from "../utils/email.js";
 
 
 const getAllTestimonial = asyncHandler(async (req, res) => {
@@ -72,46 +71,53 @@ const getAllTestimonial = asyncHandler(async (req, res) => {
     data: result,
   });
 });
+
 const createTestimonial = asyncHandler(async (req, res) => {
   const { spaceId } = req.params;
   const { name, email, text, rating } = req.body;
 
-  // Validate space ID
   if (!mongoose.Types.ObjectId.isValid(spaceId)) {
     throw new ApiError(400, "Invalid space ID");
   }
 
-  // Validate name and email
   if (!name?.trim() || !email?.trim()) {
     throw new ApiError(400, "Name and email are required.");
   }
 
-  const Newrating = Number(rating);
-  if (!Newrating || Newrating < 1 || Newrating > 5) {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    throw new ApiError(400, "Please provide a valid email address.");
+  }
+
+  const numericRating = Number(rating);
+  if (!numericRating || numericRating < 1 || numericRating > 5) {
     throw new ApiError(400, "Rating must be a number between 1 and 5.");
   }
 
-  // Check access to the space
-  const space = await Spaces.findOne({ _id: spaceId, user: req.user?._id });
+  const space = await Spaces.findOne({
+    _id: spaceId,
+    user: req.user?._id
+  });
+
   if (!space) {
     throw new ApiError(403, "Unauthorized access to space");
   }
 
-  // Handle video
+
+
   let videoURL = "";
   let isVideo = false;
+
   const videoFile = req.files?.videoURL?.[0];
   if (videoFile?.path) {
-    // diskStorage provides file.path
     const videoUpload = await uploadOnCloudinary(videoFile.path);
     videoURL = videoUpload?.secure_url || "";
     if (!videoURL) {
-      throw new ApiError(500, "Failed to upload video to Cloudinary.");
+      throw new ApiError(500, "Failed to upload video.");
     }
     isVideo = true;
   }
 
-  // Handle avatar
   let avatarUrl = "";
   const avatarFile = req.files?.avatar?.[0];
   if (avatarFile?.path) {
@@ -119,12 +125,55 @@ const createTestimonial = asyncHandler(async (req, res) => {
     avatarUrl = avatarUpload?.secure_url || "";
   }
 
-  // Validate that at least text or video exists
   if (!isVideo && !text?.trim()) {
-    throw new ApiError(400, "Please provide either a text testimonial or a video.");
+    throw new ApiError(
+      400,
+      "Please provide either a text testimonial or a video."
+    );
   }
 
-  // Create testimonial
+
+  let sentimentData = null;
+
+  if (!isVideo && text?.trim()) {
+    try {
+      const sentiment = await analyzeSentiment(text);
+
+      sentimentData = {
+        label: sentiment.label, // POSITIVE | NEGATIVE | NEUTRAL
+        score: sentiment.score,
+        processed: true
+      };
+    } catch (error) {
+      sentimentData = {
+        label: null,
+        score: null,
+        processed: false
+      };
+    }
+  }
+
+
+  const existingTestimonials = await Testimonial.find(
+    {
+      space: spaceId,
+      sourceType: "customer",
+      text: { $ne: "" }
+    },
+    { text: 1, _id: 0 }
+  );
+
+  const existingTexts = existingTestimonials.map(t => t.text);
+
+
+  const spamResult = detectSpam({
+    text: isVideo ? "" : text,
+    email,
+    sentimentLabel: sentimentData?.label,
+    existingTexts
+  });
+
+
   const testimonial = await Testimonial.create({
     space: spaceId,
     name,
@@ -132,15 +181,54 @@ const createTestimonial = asyncHandler(async (req, res) => {
     text: isVideo ? "" : text,
     videoURL: isVideo ? videoURL : "",
     avatar: avatarUrl,
-    rating: Newrating,
+    rating: numericRating,
+    sentiment: sentimentData,
+
+    
+    status: spamResult.status,
+    spam: spamResult.spam
   });
+
+  const emailToken = generateEmailToken();
+
+testimonial.emailVerification = {
+  token: emailToken,
+  sentAt: new Date(),
+  expiresAt: new Date(Date.now() + 5 * 60 *  1000),
+  verified: false
+};
+
+await testimonial.save();
+
+sendVerificationEmail(email, emailToken).catch(err =>
+  console.error("Verification email failed:", err.message)
+);
+
+
+  if (
+    testimonial.status === "active" &&
+    sentimentData?.processed &&
+    ["POSITIVE", "NEGATIVE", "NEUTRAL"].includes(sentimentData.label)
+  ) {
+    const sentimentField = `sentimentStats.${sentimentData.label}`;
+
+    await Spaces.findByIdAndUpdate(
+      spaceId,
+      { $inc: { [sentimentField]: 1 } },
+      { new: false }
+    );
+  }
+
 
   res.status(201).json({
     success: true,
     message: "Testimonial created successfully",
-    testimonial,
+    testimonial
   });
 });
+
+
+
 
 const importTweetAsTestimonial = asyncHandler(async (req, res) => {
 
@@ -233,52 +321,60 @@ const getTestimonialById = asyncHandler(async (req, res) => {
 
 
 
-const deleteTestimonial = asyncHandler(async(req, res) => {
+const deleteTestimonial = asyncHandler(async (req, res) => {
 
-  // await new Promise((resolve) => setTimeout(resolve, 4000))
+  const { TestimonialId } = req.params;
+  const user = req.user?._id;
+  const { spaceId } = req.body;
 
-    const {TestimonialId} = req.params;
-    
-    const user = req.user?._id;
-    const {spaceId} = req.body;
+  if (!mongoose.Types.ObjectId.isValid(TestimonialId)) {
+    throw new ApiError(400, "Invalid testimonial ID");
+  }
 
-    if (!mongoose.Types.ObjectId.isValid(TestimonialId)) {
-  throw new ApiError(400, "Invalid space ID");
-}
-
-if (!mongoose.Types.ObjectId.isValid(spaceId)) {
+  if (!mongoose.Types.ObjectId.isValid(spaceId)) {
     throw new ApiError(400, "Invalid space ID");
   }
 
 
-    const space = await Spaces.findOne({ _id: spaceId, user: user });
+  const space = await Spaces.findOne({ _id: spaceId, user });
   if (!space) {
     throw new ApiError(403, "You do not have access to this space");
   }
 
-    
+  const testimonial = await Testimonial.findOne({
+    _id: TestimonialId,
+    space: spaceId
+  });
 
-    // const spaceId = space._id;
+  if (!testimonial) {
+    throw new ApiError(404, "Testimonial not found");
+  }
 
-    const Testimonials  = await Testimonial.findOne({
-        _id: TestimonialId,
-        space:spaceId
-    })
+  
+  const sentimentLabel =
+    testimonial?.sentiment?.processed &&
+    ["POSITIVE", "NEUTRAL", "NEGATIVE"].includes(testimonial.sentiment.label)
+      ? testimonial.sentiment.label
+      : null;
 
-    if(!Testimonials){
-        throw new ApiError(
-            400,
-            "User is not authorized user"
-        )
-    }
+  
+  await testimonial.deleteOne();
 
-    await Testimonials.deleteOne();
-    return res.status(200).json(
-        new ApiResponse(200, null, "Testimonial deleted successfully")
+  if (sentimentLabel) {
+    const sentimentField = `sentimentStats.${sentimentLabel}`;
+
+    await Spaces.findByIdAndUpdate(
+      spaceId,
+      { $inc: { [sentimentField]: -1 } },
+      { new: false }
     );
+  }
 
+  return res.status(200).json(
+    new ApiResponse(200, null, "Testimonial deleted successfully")
+  );
+});
 
-})
 
 const updateTestimonial = asyncHandler(async(req , res) => {
     const {TestimonialId} = req.params;
@@ -440,6 +536,120 @@ const likecontroller = asyncHandler(async(req, res) => {
     )
 })
 
+const verifyEmail = asyncHandler(async (req, res) => {
+  const { token } = req.query;
+
+  const testimonial = await Testimonial.findOne({
+    "emailVerification.token": token
+  });
+
+  if (!testimonial) {
+    throw new ApiError(400, "Invalid or expired token");
+  }
+
+  // Already verified
+  if (testimonial.emailVerification.verified) {
+    return res.json({
+      success: true,
+      message: "Email already verified"
+    });
+  }
+
+  const now = new Date();
+  const sentAt = testimonial.emailVerification.sentAt;
+
+  const FIVE_MINUTES = 5 * 60 * 1000;
+  const isExpired = sentAt && now - sentAt > FIVE_MINUTES;
+
+  
+  testimonial.emailVerification.verified = true;
+  testimonial.emailVerification.verifiedAt = now;
+
+  
+  if (isExpired) {
+    const reason = "Email verification exceeded 5 minutes";
+
+    if (!testimonial.spam.reasons.includes(reason)) {
+      testimonial.spam.reasons.push(reason);
+    }
+
+    testimonial.spam.score = Math.max(testimonial.spam.score, 5);
+
+    if (testimonial.spam.score >= 5) {
+      testimonial.status = "spam";
+    }
+  } else {
+ 
+    testimonial.spam.score = Math.max(0, testimonial.spam.score - 2);
+
+    if (testimonial.spam.score < 5) {
+      testimonial.status = "active";
+    }
+  }
+
+  await testimonial.save();
+
+  res.json({
+    success: true,
+    verifiedLate: isExpired,
+    status: testimonial.status,
+    spamScore: testimonial.spam.score,
+    message: isExpired
+      ? "Email verified, but verification was delayed."
+      : "Email verified successfully"
+  });
+});
+
+
+
+
+const toggleFeaturedTestimonial = asyncHandler(async (req, res) => {
+  const { testimonialId } = req.params;
+
+  if (!mongoose.Types.ObjectId.isValid(testimonialId)) {
+    throw new ApiError(400, "Invalid testimonial ID");
+  }
+
+  const testimonial = await Testimonial.findById(testimonialId);
+
+  if (!testimonial) {
+    throw new ApiError(404, "Testimonial not found");
+  }
+
+
+  const space = await Spaces.findOne({
+    _id: testimonial.space,
+    // user: req.user?._id
+  });
+
+  if (!space) {
+    throw new ApiError(403, "Unauthorized access to this testimonial");
+  }
+
+  const isCurrentlyFeatured = testimonial.featured?.enabled === true;
+
+  testimonial.featured.enabled = !isCurrentlyFeatured;
+  testimonial.featured.at = !isCurrentlyFeatured ? new Date() : null;
+
+ 
+  if (isCurrentlyFeatured) {
+    testimonial.featured.order = null;
+  }
+
+  await testimonial.save();
+
+  res.status(200).json({
+    success: true,
+    message: testimonial.featured.enabled
+      ? "Testimonial added to Wall of Love"
+      : "Testimonial removed from Wall of Love",
+    featured: testimonial.featured
+  });
+});
+
+
+
+
 
 
 export {
@@ -450,5 +660,7 @@ updateVideo,
 getAllTestimonial,
 likecontroller,
 getTestimonialById,
-importTweetAsTestimonial
+importTweetAsTestimonial,
+verifyEmail,
+toggleFeaturedTestimonial
 }

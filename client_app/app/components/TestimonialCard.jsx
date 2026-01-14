@@ -9,10 +9,12 @@ import {
   Share2,
   Code2,
   // LucideNetwork,
-  Network
+  Network,
+  Heart
 } from "lucide-react";
 import { FaXTwitter } from "react-icons/fa6";
 import { FaLinkedin } from "react-icons/fa";
+import {CiHeart} from "react-icons/ci"
 import { useSubmit } from "@remix-run/react";
 import ConfirmModal from "./ConfirmModal";
 import jsPDF from "jspdf";
@@ -51,6 +53,9 @@ export default function TestimonialCard({ testimonial, avatar, spaceId}) {
   const [localSentiment, setLocalSentiment] = useState(null);
   const [isAnalyzingSentiment, setIsAnalyzingSentiment] = useState(false);
   const [hasAnalyzedSentiment, setHasAnalyzedSentiment] = useState(false);
+  const [isLiked, setIsLiked] = useState(false);
+  const [liking, setLiking] = useState(false);
+
 
 
 
@@ -273,6 +278,39 @@ const API_URI = import.meta.env.VITE_API_URL;
   }
 };
 
+useEffect(() => {
+  if (typeof testimonial?.featured?.enabled === "boolean") {
+    setIsLiked(testimonial.featured.enabled);
+  }
+}, [testimonial?.featured?.enabled]);
+
+
+
+const handleToggleLike = async () => {
+  if (liking) return;
+
+  setLiking(true);
+
+  try {
+    setIsLiked(prev => !prev);
+
+    await fetch(
+      `${API_URI}/api/v1/users/Testimonial/toggle-featured/${testimonial._id}`,
+      {
+        method: "PATCH",
+        credentials: "include",
+      }
+    );
+  } catch (err) {
+    console.error("Failed to toggle featured", err);
+    setIsLiked(prev => !prev); // rollback
+  } finally {
+    setLiking(false);
+  }
+};
+
+
+
 
 
   
@@ -280,30 +318,54 @@ const API_URI = import.meta.env.VITE_API_URL;
   return (
     <>
       <div className="relative bg-gray-900 text-white rounded-xl shadow-lg p-7 w-[900px] ml-auto mr-6 mb-10">
-     <div
-  className={`absolute top-4 left-4 text-[16px] font-bold px-7 py-1 rounded-2xl ${
-    isVideo
-      ? "bg-yellow-200 text-orange-400"
-      : "bg-blue-200 text-blue-500"
-  } shadow-lg`}
->
-  {isVideo ? "Video" : "Text"}
-</div>
+ {/* Top-left Type Badge */}
+<div className="absolute top-4 left-4 flex items-center gap-2">
+  {/* Type badge */}
+  <div
+    className={`text-[14px] font-bold px-5 py-1 rounded-2xl shadow ${
+      isVideo
+        ? "bg-yellow-200 text-orange-500"
+        : "bg-blue-200 text-blue-600"
+    }`}
+  >
+    {isVideo ? "Video" : "Text"}
+  </div>
 
-{isAnalyzingSentiment && (
-  <div className="absolute top-4 right-4">
-    <div className="flex items-center gap-2 bg-gray-100 text-gray-700 px-4 py-1 rounded-full text-sm shadow">
+  {/* Sentiment badge */}
+  {isAnalyzingSentiment && (
+    <div className="flex items-center gap-2 bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-sm shadow">
       <span className="animate-pulse">Analyzing...</span>
     </div>
-  </div>
-)}
+  )}
+
+  {hasAnalyzedSentiment && localSentiment && !isAnalyzingSentiment && (
+    <div className="animate-fade-in scale-95">
+      {getSentimentIcon()}
+    </div>
+  )}
+</div>
 
 
-{hasAnalyzedSentiment && localSentiment && !isAnalyzingSentiment && (
-  <div className="absolute top-4 right-4 animate-fade-in scale-95">
-    {getSentimentIcon()}
-  </div>
-)}
+{/* Top-right Heart Button */}
+<div className="absolute top-4 right-4">
+  <button
+    onClick={handleToggleLike}
+    disabled={liking}
+  className="group transition-transform active:scale-90"
+  >
+    <Heart
+      className={`w-6 h-6 transition-all duration-200 ${
+        isLiked
+          ? "fill-red-500 stroke-red-500"
+          : "fill-none stroke-red-500"
+      }`}
+    />
+  </button>
+</div>
+
+
+
+
 
 
 

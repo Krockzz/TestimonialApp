@@ -5,7 +5,7 @@ import {User } from "../models/User.models.js"
 // import {sendEmail} from "../utils/nodemailer.js"
 import jwt from "jsonwebtoken"
 import { Spaces } from "../models/Spaces.models.js"
-import { sendEmail } from "../utils/resend.js"
+// import { sendEmail } from "../utils/resend.js"
 
 
 
@@ -417,6 +417,7 @@ const getUserInfo = asyncHandler(async(req, res) => {
     )
 })
 
+/*
 const forgotPassword = asyncHandler(async(req, res) => {
 
     const{email} = req.body
@@ -455,6 +456,8 @@ const forgotPassword = asyncHandler(async(req, res) => {
 
 })
 
+*/
+
 const checker = asyncHandler(async(req , res) => {
 
     const token  = req.cookies.accessToken;
@@ -486,7 +489,7 @@ export {
     changePassword,
     RefreshAccessToken,
     updateUser,
-    forgotPassword,
+    // forgotPassword,
     getUserInfo
 }
 

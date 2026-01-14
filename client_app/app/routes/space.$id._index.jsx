@@ -1,6 +1,12 @@
 import { json, useLoaderData, redirect } from "@remix-run/react";
 import { requireUser } from "../../../utilities/requireUser";
-// import IntegrationCard from "../components/IntegrationCard.jsx"
+import CollectingWidgetModal from "../components/CollectingWidgetModal";
+import { GiSelfLove } from "react-icons/gi";
+import { CiInboxIn  } from "react-icons/ci";
+import WallOfLovePanel from "../components/WallOfLOvePanel";
+import { IoArrowRedoCircleSharp } from "react-icons/io5";
+import RequestTestimonial from "../components/RequestTestimonial";
+
 
 import {
   Pencil,
@@ -10,8 +16,13 @@ import {
   Youtube,
   Twitter,
   Instagram,
+  Layers,
+  Globe,
+  BarChart3,
 } from "lucide-react";
+import { RiSpamFill } from "react-icons/ri";
 import { FaEnvelopeOpenText } from "react-icons/fa";
+
 import TestimonialCard from "../components/TestimonialCard";
 import Integration from "../components/Integration";
 import { useState } from "react";
@@ -20,121 +31,104 @@ import { AnimatePresence, motion } from "framer-motion";
 const API_URI = import.meta.env.VITE_API_URL;
 
 export async function loader({ request, params }) {
-  const user = await requireUser(request);
+  await requireUser(request);
   const spaceId = params.id;
   const cookieHeader = request.headers.get("Cookie");
 
-  const res1 = await fetch(`${API_URI}/api/v1/users/spaces/getSpace/${spaceId}`, {
-    method: "GET",
-    headers: { Cookie: cookieHeader },
-  });
+  const res1 = await fetch(
+    `${API_URI}/api/v1/users/spaces/getSpace/${spaceId}`,
+    { headers: { Cookie: cookieHeader } }
+  );
 
-  if (!res1.ok) throw new Response("Failed to load space", { status: res1.status });
+  const res2 = await fetch(
+    `${API_URI}/api/v1/users/Testimonial/getTestimonials/${spaceId}`,
+    { headers: { Cookie: cookieHeader } }
+  );
 
-  const res2 = await fetch(`${API_URI}/api/v1/users/Testimonial/getTestimonials/${spaceId}`, {
-    method: "GET",
-    headers: { Cookie: cookieHeader },
-  });
-
-  if (!res2.ok) throw new Response("Failed to load testimonials", { status: res2.status });
+  if (!res1.ok || !res2.ok) {
+    throw new Response("Failed to load data", { status: 500 });
+  }
 
   const spaceData = await res1.json();
-  const TestimonialData = await res2.json();
-  // console.log(TestimonialData)
+  const testimonialData = await res2.json();
 
-  const docs = TestimonialData.data.docs
+  const docs = testimonialData.data.docs;
 
-  const customerTestimonials = docs.filter(t => t.sourceType !== "twitter")
-  console.log("this is it" ,customerTestimonials)
-  const twitterTestimonials = docs.filter(t=> t.sourceType === "twitter")
-
-  // console.log(twitterTestimonials)
-  console.log("This is the customer testimonials" , customerTestimonials)
-
-
-  return json({ spaceData, customerTestimonials , twitterTestimonials });
+  return json({
+    spaceData,
+    customerTestimonials: docs.filter(t => t.sourceType !== "twitter"),
+    twitterTestimonials: docs.filter(t => t.sourceType === "twitter"),
+  });
 }
+
+/* ---------------- ACTION ---------------- */
 
 export async function action({ request, params }) {
   const cookieHeader = request.headers.get("Cookie");
   const data = await request.formData();
   const spaceId = params.id;
 
-  const intent = data.get("intent");
-
-  
-  if (intent === "importTweet") {
+  if (data.get("intent") === "importTweet") {
     const tweetUrl = data.get("tweetUrl");
-    
 
-    try {
-      const res = await fetch(`${API_URI}/api/v1/users/Testimonial/import-twitter/${spaceId}`, {
+    await fetch(
+      `${API_URI}/api/v1/users/Testimonial/import-twitter/${spaceId}`,
+      {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Cookie: cookieHeader,
         },
         body: JSON.stringify({ tweetUrl, spaceId }),
-      });
-
-      const result = await res.json();
-
-      if (!res.ok) {
-        return json({ message: result.message || "Failed to import tweet", status: res.status });
       }
+    );
 
-      return redirect(`/space/${spaceId}`);
-    } catch (error) {
-      console.error("Error importing tweet:", error);
-      return json({ message: "Internal server error", status: 500 });
-    }
+    return redirect(`/space/${spaceId}`);
   }
 
-  else {
-  
-  
-    const TestiId = data.get("testimonialId");
+  const testimonialId = data.get("testimonialId");
 
-    if (!TestiId) {
-      return json({ message: "No testimonial ID provided", status: 400 });
-    }
-
-    const res = await fetch(`${API_URI}/api/v1/users/Testimonial/delete/${TestiId}`, {
+  await fetch(
+    `${API_URI}/api/v1/users/Testimonial/delete/${testimonialId}`,
+    {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         Cookie: cookieHeader,
       },
-      body: JSON.stringify({ TestiId, spaceId }),
-    });
-
-    if (!res.ok) {
-      return json({ message: "Failed to delete testimonial", status: res.status });
+      body: JSON.stringify({ testimonialId, spaceId }),
     }
+  );
 
-    return redirect(`/space/${spaceId}`);
-  
-  }
-
-  return json({ message: "Unknown action", status: 400 });
+  return redirect(`/space/${spaceId}`);
 }
 
 
+
 export default function TestimonialsOnly() {
-  const { spaceData, customerTestimonials , twitterTestimonials } = useLoaderData();
+  const { spaceData, customerTestimonials, twitterTestimonials } =
+    useLoaderData();
+
   const space = spaceData.data;
-  const testimonials = customerTestimonials
-  const TweetTestimonials = twitterTestimonials
 
   const [filter, setFilter] = useState("All");
+  const [activePanel, setActivePanel] = useState("testimonials");
+
   const [showIntegrations, setShowIntegrations] = useState(false);
-  const [activePanel, setActivePanel] = useState("testimonials"); 
+  const [showEmbed, setShowEmbed] = useState(false);
+  const [showPages, setShowPages] = useState(false);
+  const [showAnalytics, setShowAnalytics] = useState(false);
 
+  const [showWidgetModal, setShowWidgetModal] = useState(false);
 
-  const filteredTestimonials = testimonials.filter((t) => {
+  const filteredTestimonials = customerTestimonials.filter(t => {
+    if (filter === "Spam") return t.status === "spam";
+    if (t.status === "spam") return false;
+
     if (filter === "All") return true;
     if (filter === "Text") return !t.videoURL;
     if (filter === "Videos") return !!t.videoURL;
+
     return true;
   });
 
@@ -142,6 +136,7 @@ export default function TestimonialsOnly() {
     { label: "All", icon: Inbox },
     { label: "Videos", icon: FaEnvelopeOpenText },
     { label: "Text", icon: Pencil },
+    { label: "Spam", icon: RiSpamFill },
   ];
 
   return (
@@ -166,116 +161,194 @@ export default function TestimonialsOnly() {
 
       <hr className="border-t border-gray-700 mb-6" />
 
-      <div className="w-full flex gap-6 px-6">
-        <aside className="w-48">
-          <div className="flex flex-col gap-2 text-sm">
-            <h2 className="text-white font-bold mb-4 text-xl">Inbox</h2>
+      <div className="flex gap-6 px-6">
+        {/* ---------------- SIDEBAR ---------------- */}
+        <aside className="w-56">
+          <h2 className="font-bold text-xl mb-4">Inbox</h2>
 
-            {filters.map(({ label, icon:Icon }) => (
-              <button
-                key={label}
-                type="button"
-                onClick={() => {
-                  setFilter(label);
-                   setActivePanel("testimonials");
+          {filters.map(({ label, icon: Icon }) => (
+            <button
+              key={label}
+              onClick={() => {
+                setFilter(label);
+                setActivePanel("testimonials");
+              }}
+              className={`w-full flex items-center gap-2 px-3 py-2 text-left
+                ${
+                  filter === label
+                    ? "text-white border-b-2 border-blue-400"
+                    : "text-gray-400 hover:text-white hover:bg-gray-800"
+                }`}
+            >
+              <Icon className="w-4 h-4" />
+              {label === "All" ? "All Testimonials" : label}
+            </button>
+          ))}
 
-                }
-                  
-                }
-                
-                className={`w-full flex items-center gap-2 text-left px-3 py-2 transition text-[15px]
-                  ${
-                    filter === label
-                      ? "text-white border-b-2 border-blue-400"
-                      : "text-gray-400 hover:text-white hover:bg-gray-800"
-                  }
-                `}
-              >
-                <Icon className="w-4 h-4" />
-                {label === "All" ? "All Testimonials" : label}
-              </button>
-            ))}
+          {/* -------- INTEGRATIONS -------- */}
+          <Accordion
+            title="Integrations"
+            open={showIntegrations}
+            toggle={setShowIntegrations}
+            items={[
+              ["Social Media", "integration", [Twitter, Instagram]],
+              ["Video", "integration-video", [Youtube]],
+            ]}
+            activePanel={activePanel}
+            setActivePanel={setActivePanel}
+          />
 
-            <div className="mt-8">
-              <button
-                type="button"
-                onClick={() => setShowIntegrations((prev) => !prev)}
-                className="w-full text-left flex items-center justify-between text-white px-3 py-2 hover:bg-gray-800 transition rounded-md"
-              >
-                <span className="text-[15px] font-medium">Integrations</span>
-                {showIntegrations ? (
-                  <ChevronDown className="w-4 h-4 text-gray-400" />
-                ) : (
-                  <ChevronRight className="w-4 h-4 text-gray-400" />
-                )}
-              </button>
+          {/* -------- EMBED -------- */}
+          <Accordion
+            title="Embed"
+            icon={Layers}
+            open={showEmbed}
+            toggle={setShowEmbed}
+            items={[
+              ["Collecting widget", "embed-widget", [CiInboxIn]],
+              ["Wall of Love", "wall-of-love", [GiSelfLove]],
+            ]}
+            activePanel={activePanel}
+            setActivePanel={setActivePanel}
+            onSelect={key => {
+              if (key === "embed-widget") setShowWidgetModal(true);
+            }}
+          />
 
-              {showIntegrations && (
-                <div className="ml-4 mt-2 flex flex-col gap-2">
-                 <button
-  type="button"
-  onClick={() => setActivePanel("integration")}
-  className={`flex items-center gap-2 text-gray-300 px-2 py-1 rounded hover:bg-gray-800 w-full text-left ${
-    activePanel === "integration" ? "bg-gray-800 border-l-4 border-blue-400" : ""
-  }`}
->
-  Social Media
-  <Twitter className="w-4 h-4" />
-  <Instagram className="w-4 h-4" />
-</button>
+          {/* -------- PAGES -------- */}
+          <Accordion
+            title="Pages"
+            icon={Globe}
+            open={showPages}
+            toggle={setShowPages}
+            items={[
+              ["Public Page", "public-page" , [GiSelfLove]],
+              ["Request Testimonial", "req-testi" , [IoArrowRedoCircleSharp]],
+            ]}
+            activePanel={activePanel}
+            setActivePanel={setActivePanel}
+          />
 
-
-
-                  <div className="flex items-center gap-2 text-gray-300 px-2 py-1 rounded hover:bg-gray-800">
-                    Video <Youtube className="w-4 h-4" />
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
+          {/* -------- ANALYTICS -------- */}
+          <Accordion
+            title="Analytics"
+            icon={BarChart3}
+            open={showAnalytics}
+            toggle={setShowAnalytics}
+            items={[
+              ["Overview", "analytics-overview"],
+              ["Sources", "analytics-sources"],
+              ["Engagement", "analytics-engagement"],
+            ]}
+            activePanel={activePanel}
+            setActivePanel={setActivePanel}
+          />
         </aside>
 
-        <div className="flex-1 min-h-[300px] flex items-start justify-center">
+        {/* ---------------- MAIN ---------------- */}
+        <div className="flex-1">
           <AnimatePresence mode="wait">
             <motion.div
-              key={filter}
+              key={activePanel + filter}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.4, ease: "easeInOut" }}
-              className="w-full flex flex-col gap-4"
+              transition={{ duration: 0.3 }}
+              className="space-y-4"
             >
-              {activePanel === "integration" ? (
-                <>
-      <Integration twitterTestimonials={TweetTestimonials}  spaceId = {space._id} />
-  {/* <IntegrationCard twitter={TweetTestimonials} /> */}
-</>
-) : filteredTestimonials.length === 0 ? (
-  <div className="flex flex-col items-center gap-4 py-10">
-    <Inbox className="w-14 h-14 text-gray-500 mb-4" />
-    <p className="text-lg font-semibold text-center text-2xl text-white">
-      No testimonials yet
-    </p>
-  </div>
-) : (
-  filteredTestimonials.map((t) => {
-    const type = t.videoURL ? "video" : "text";
-    return (
-      <TestimonialCard
-        key={t._id}
-        testimonial={t}
-        avatar={space.avatar}
-        spaceId={space._id}
-        type={type}
-      />
-    );
-  })
-)}
+              {activePanel === "integration" && (
+                <Integration
+                  twitterTestimonials={twitterTestimonials}
+                  spaceId={space._id}
+                />
+              )}
 
+              {activePanel === "public-page" && (
+                <WallOfLovePanel spaceId={space._id} />
+              )}
+              {
+                activePanel ==="req-testi" && (
+                  <RequestTestimonial spaceId={space._id} />
+                )
+              }
+
+              
+
+              {activePanel === "testimonials" &&
+                filteredTestimonials.map(t => (
+                  <TestimonialCard
+                    key={t._id}
+                    testimonial={t}
+                    spaceId={space._id}
+                    avatar={space.avatar}
+                    type={t.videoURL ? "video" : "text"}
+                  />
+                ))}
             </motion.div>
           </AnimatePresence>
         </div>
       </div>
+
+      <CollectingWidgetModal
+        open={showWidgetModal}
+        onClose={() => setShowWidgetModal(false)}
+        spaceName={space.name}
+        spaceAvatar={space.avatar}
+        spaceId={space._id}
+      />
     </section>
   );
 }
+
+
+
+function Accordion({
+  title,
+  icon: Icon,
+  open,
+  toggle,
+  items,
+  activePanel,
+  setActivePanel,
+  onSelect,
+}) {
+  return (
+    <div className="mt-6">
+      <button
+        onClick={() => toggle(v => !v)}
+        className="w-full flex justify-between px-3 py-2 hover:bg-gray-800 rounded-md"
+      >
+        <span className="flex items-center gap-2 text-[15px] font-medium">
+          {Icon && <Icon className="w-4 h-4" />}
+          {title}
+        </span>
+        {open ? <ChevronDown /> : <ChevronRight />}
+      </button>
+
+      {open && (
+        <div className="ml-4 mt-2 flex flex-col gap-2">
+          {items.map(([label, key, icons]) => (
+            <button
+              key={key}
+              onClick={() => {
+                setActivePanel(key);
+                onSelect?.(key);
+              }}
+              className={`flex items-center gap-2 px-2 py-1 text-left rounded hover:bg-gray-800 ${
+                activePanel === key
+                  ? "bg-gray-800 border-l-4 border-blue-400"
+                  : "text-gray-300"
+              }`}
+            >
+              {icons &&
+                icons.map((I, i) => <I key={i} className="w-4 h-4" />)}
+              {label}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+

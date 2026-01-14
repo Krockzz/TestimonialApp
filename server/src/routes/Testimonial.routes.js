@@ -1,7 +1,7 @@
 import { Router } from "express";
 // import { verify } from "jsonwebtoken";
 import { verifyJwt } from "../middlewares/auth.middlewares.js";
-import { createTestimonial, deleteTestimonial, getAllTestimonial, getTestimonialById, likecontroller, updateTestimonial , importTweetAsTestimonial } from "../controllers/Testimonial.controllers.js";
+import { createTestimonial, deleteTestimonial, getAllTestimonial, getTestimonialById, likecontroller, updateTestimonial , importTweetAsTestimonial, verifyEmail, toggleFeaturedTestimonial } from "../controllers/Testimonial.controllers.js";
 import { upload } from "../middlewares/multer.middleware.js";
 
 const router = Router()
@@ -31,5 +31,7 @@ router.route("/update-Testimonial/:TestimonialId").patch(verifyJwt , updateTesti
 router.route("/getTestimonials/:spaceId").get(verifyJwt , getAllTestimonial)
 router.route("/testimonial/:TestimonialId/like").post(verifyJwt , likecontroller);
 router.route("/getTestimonial/:TestiId").get(  getTestimonialById)
+router.route("/verify-email").get(verifyEmail)
+router.route("/toggle-featured/:testimonialId").patch(toggleFeaturedTestimonial)
 
 export default router;

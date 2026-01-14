@@ -5,6 +5,8 @@ import { uploadOnCloudinary } from "../utils/cloudinary.js";
 import { Spaces } from "../models/Spaces.models.js";
 import { Testimonial } from "../models/Testimonials.models.js";
 import mongoose from "mongoose";
+import { summarizeText } from "../utils/summarizeText.js";
+import { dedupeTexts } from "../utils/duplicate_Text.js";
 
 const getTestimonialCount = async(SpaceId) => {
 
@@ -51,7 +53,7 @@ const getAllSpaces = asyncHandler(async(req, res) => {
         { $match: { user: new mongoose.Types.ObjectId(userId) } }, 
         {
             $lookup:{
-                from: "testimonials", // Collection name in MongoDB
+                from: "testimonials", 
                 localField: "_id",
                 foreignField: "space",
                 as: "testimonials",
@@ -78,7 +80,7 @@ const getAllSpaces = asyncHandler(async(req, res) => {
 
 
 
-          // If there are no spaces found, return empty array gracefully
+          
     if (!result.docs || result.docs.length === 0) {
         return res.status(200).json({
             success: true,
@@ -314,6 +316,77 @@ const updateAvatar = asyncHandler(async (req, res) => {
   );
 });
 
+ const generateSpaceInsights = asyncHandler(async (req, res) => {
+  const { SpaceId } = req.params;
+  const userId = req.user?._id;
+
+  
+  if (!mongoose.Types.ObjectId.isValid(SpaceId)) {
+    throw new ApiError(400, "Invalid space ID");
+  }
+
+  const space = await Spaces.findOne({ _id: SpaceId, user: userId });
+  if (!space) {
+    throw new ApiError(403, "Unauthorized access to space");
+  }
+
+  const testimonials = await Testimonial.find({
+    space: SpaceId,
+    "sentiment.processed": true,
+  }).select("text sentiment.label");
+
+  if (!testimonials.length) {
+    throw new ApiError(400, "Not enough testimonials to generate insights");
+  }
+
+  
+ const positiveNeutralRaw = [];
+const negativeRaw = [];
+
+for (const t of testimonials) {
+  if (!t.text?.trim()) continue;
+
+  if (t.sentiment.label === "NEGATIVE") {
+    negativeRaw.push(t.text);
+  } else if(t.sentiment.label === "POSITIVE") {
+    // POSITIVE + NEUTRAL
+    positiveNeutralRaw.push(t.text);
+  }
+}
+
+
+const positiveNeutral = dedupeTexts(positiveNeutralRaw);
+const negative = dedupeTexts(negativeRaw);
+
+const positiveNeutralText = positiveNeutral.join(" ");
+const negativeText = negative.join(" ");
+
+ 
+  const strengths =
+    positiveNeutralText.length >= 50
+      ? await summarizeText(positiveNeutralText)
+      : "Not enough positive feedback to generate insights.";
+
+  const improvements =
+    negativeText.length >= 50
+      ? await summarizeText(negativeText)
+      : "No major issues reported by users.";
+
+  
+  space.insights = {
+    strengths,
+    improvements,
+    lastGeneratedAt: new Date(),
+  };
+
+  space.insightVersion += 1;
+  await space.save();
+
+  return res.status(200).json(
+    new ApiResponse(200, space.insights, "Insights generated successfully")
+  );
+});
+
 
 
 
@@ -325,5 +398,6 @@ export{
     updateSpace,
     updateAvatar,
     getAllSpaces,
-    getSpaceById
+    getSpaceById,
+    generateSpaceInsights
 }

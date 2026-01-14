@@ -8,6 +8,7 @@ import { IoIosLink } from "react-icons/io";
 import ConfirmModal from "./ConfirmModal";
 import { IoMdAdd } from "react-icons/io";
 import toast from "react-hot-toast";
+import { FaSquarespace } from "react-icons/fa";
 
 
 
@@ -134,6 +135,15 @@ export default function SpacesList({ spaces }) {
                         >
                           <CiEdit size={18} />
                           <span>Edit Space</span>
+                        </Link>
+
+                        <Link
+                          to={`/space/${space._id}/insights`}
+                          className="flex items-center w-full px-4 py-2 text-sm hover:bg-gray-800 gap-2"
+                          onClick={() => setOpenMenuId(null)}
+                           >
+                        <FaSquarespace size={18} />
+                          <span>Space Insights</span>
                         </Link>
                         <button
                           onClick={() => handleDeleteClick(space._id)}

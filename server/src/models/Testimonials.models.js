@@ -9,7 +9,6 @@ const TestimonialSchema = new Schema(
       required: true
     },
 
-    // Customer-uploaded testimonial
     name: {
       type: String,
       trim: true,
@@ -18,19 +17,20 @@ const TestimonialSchema = new Schema(
     },
 
     email: {
-      type: String
+      type: String,
+      index: true
     },
 
     text: {
-      type: String, // testimonial text or tweet text
+      type: String
     },
 
     videoURL: {
-      type: String, // Cloudinary video for customer-uploaded content
+      type: String
     },
 
     avatar: {
-      type: String, // customer avatar or twitter profile pic
+      type: String
     },
 
     rating: {
@@ -48,36 +48,84 @@ const TestimonialSchema = new Schema(
     likes: [
       {
         type: Schema.Types.ObjectId,
-        ref: "User" // likes inside your app
+        ref: "User"
       }
     ],
 
-    // ---------- TWITTER IMPORT DATA ----------
     twitterData: {
-      tweetId: { type: String }, // for linking back to the original tweet
-      twitterHandle: { type: String }, // e.g. @elonmusk
-      twitterName: { type: String }, // Full display name
-      likeCount: { type: Number }, // Twitter like count
-      originalTweetUrl: { type: String }, // Full tweet URL
+      tweetId: { type: String },
+      twitterHandle: { type: String },
+      twitterName: { type: String },
+      likeCount: { type: Number },
+      originalTweetUrl: { type: String },
       media: [
         {
           type: {
             type: String,
-            enum: ["photo", "video", "animated_gif"],
+            enum: ["photo", "video", "animated_gif"]
           },
-          url: { type: String }, // direct URL to image or video variant
-          previewImageUrl: { type: String }, // for videos/GIFs (optional)
-          durationMs: { type: Number }, // for videos/GIFs (optional)
+          url: { type: String },
+          previewImageUrl: { type: String },
+          durationMs: { type: Number }
         }
       ]
     },
 
-    // Identify where the testimonial came from
     sourceType: {
       type: String,
       enum: ["customer", "twitter"],
       required: true,
       default: "customer"
+    },
+
+    sentiment: {
+      label: {
+        type: String,
+        enum: ["POSITIVE", "NEGATIVE", "NEUTRAL"]
+      },
+      score: { type: Number },
+      processed: { type: Boolean, default: false }
+    },
+
+    status: {
+      type: String,
+      enum: ["active", "spam", "deleted"],
+      default: "active",
+      index: true
+    },
+
+    
+    featured: {
+      enabled: {
+        type: Boolean,
+        default: false,
+        index: true
+      },
+      at: {
+        type: Date,
+        default: null
+      },
+      order: {
+        type: Number,
+        default: null
+      }
+    },
+
+    spam: {
+      score: { type: Number, default: 0 },
+      reasons: [{ type: String }]
+    },
+
+    emailVerification: {
+      verified: { type: Boolean, default: false },
+      token: { type: String },
+      sentAt: { type: Date },
+      verifiedAt: { type: Date }
+    },
+
+    submissionMeta: {
+      ip: { type: String },
+      userAgent: { type: String }
     }
   },
   { timestamps: true }
@@ -86,4 +134,3 @@ const TestimonialSchema = new Schema(
 TestimonialSchema.plugin(mongooseAggregatePaginate);
 
 export const Testimonial = mongoose.model("Testimonial", TestimonialSchema);
-

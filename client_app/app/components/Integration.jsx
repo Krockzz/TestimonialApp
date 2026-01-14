@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Download, Heart, Star, ChevronUp } from "lucide-react";
-import { FaXTwitter } from "react-icons/fa6";
-import { Linkedin, Instagram } from "lucide-react";
+import { FaXTwitter, FaReddit } from "react-icons/fa6";
+import { Linkedin, Instagram  } from "lucide-react";
 import dayjs from "dayjs";
 import { motion, AnimatePresence } from "framer-motion";
 import ImportFromTwitterModal from "../components/IntegrationModal.jsx";
@@ -12,7 +12,6 @@ export default function Integration({ twitterTestimonials }) {
   const [activePlatform, setActivePlatform] = useState("twitter");
   const [showIntegrationModal, setShowIntegrationModal] = useState(false);
 
-  // Track expanded card
   const [expandedCardId, setExpandedCardId] = useState(null);
   const [testimonialToDelete, setTestimonialToDelete] = useState(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -23,8 +22,8 @@ export default function Integration({ twitterTestimonials }) {
 
   const platforms = [
     { label: "Twitter", icon: <FaXTwitter size={20} />, key: "twitter" },
-    { label: "LinkedIn", icon: <Linkedin size={20} />, key: "linkedin" },
-    { label: "Instagram", icon: <Instagram size={20} />, key: "instagram" },
+    { label: "Reddit", icon: <FaReddit size={20} />, key: "reddit" },
+    // { label: "Instagram", icon: <Instagram size={20} />, key: "instagram" },
   ];
 
   const renderPlatformButtons = (size = "md") => (
@@ -39,6 +38,7 @@ export default function Integration({ twitterTestimonials }) {
           onClick={() => {
             setActivePlatform(p.key);
             if (p.key === "twitter") setShowIntegrationModal(true);
+            // if(p.key ===) "reddit"
           }}
           className={`flex items-center space-x-2 bg-gray-800 border border-gray-600 hover:bg-gray-700 text-white px-3 py-1 rounded-md transition text-sm ${
             size === "center" ? "px-4 py-2" : ""
