@@ -273,8 +273,6 @@ const updateSpace = asyncHandler(async(req , res) => {
       
 })
 
-
-
 const updateAvatar = asyncHandler(async (req, res) => {
   const { spaceId } = req.body;
   const avatarFile = req.file; // now using diskStorage, so path exists
@@ -316,19 +314,16 @@ const updateAvatar = asyncHandler(async (req, res) => {
   );
 });
 
- const generateSpaceInsights = asyncHandler(async (req, res) => {
+const generateSpaceInsights = asyncHandler(async (req, res) => {
   const { SpaceId } = req.params;
   const userId = req.user?._id;
 
-  
   if (!mongoose.Types.ObjectId.isValid(SpaceId)) {
     throw new ApiError(400, "Invalid space ID");
   }
 
   const space = await Spaces.findOne({ _id: SpaceId, user: userId });
-  if (!space) {
-    throw new ApiError(403, "Unauthorized access to space");
-  }
+  if (!space) throw new ApiError(403, "Unauthorized access to space");
 
   const testimonials = await Testimonial.find({
     space: SpaceId,
@@ -339,43 +334,45 @@ const updateAvatar = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Not enough testimonials to generate insights");
   }
 
-  
- const positiveNeutralRaw = [];
-const negativeRaw = [];
+  const positiveNeutralRaw = [];
+  const negativeRaw = [];
 
-for (const t of testimonials) {
-  if (!t.text?.trim()) continue;
-
-  if (t.sentiment.label === "NEGATIVE") {
-    negativeRaw.push(t.text);
-  } else if(t.sentiment.label === "POSITIVE") {
-    // POSITIVE + NEUTRAL
-    positiveNeutralRaw.push(t.text);
+  for (const t of testimonials) {
+    if (!t.text?.trim()) continue;
+    if (t.sentiment.label === "NEGATIVE") negativeRaw.push(t.text);
+    else positiveNeutralRaw.push(t.text);
   }
-}
 
+  const positiveNeutral = dedupeTexts(positiveNeutralRaw).join(". ");
+  const negative = dedupeTexts(negativeRaw).join(". ");
 
-const positiveNeutral = dedupeTexts(positiveNeutralRaw);
-const negative = dedupeTexts(negativeRaw);
+  // -----------------------------
+  // Summarize each once
+  // -----------------------------
+  const positiveSummary =
+    positiveNeutral.length >= 80
+      ? await summarizeText(positiveNeutral, "strengths")
 
-const positiveNeutralText = positiveNeutral.join(" ");
-const negativeText = negative.join(" ");
+      : "";
 
- 
-  const strengths =
-    positiveNeutralText.length >= 50
-      ? await summarizeText(positiveNeutralText)
-      : "Not enough positive feedback to generate insights.";
+  const negativeSummary =
+    negative.length >= 80
+      ? await summarizeText(negative, "improvements")
 
-  const improvements =
-    negativeText.length >= 50
-      ? await summarizeText(negativeText)
-      : "No major issues reported by users.";
+      : "";
 
-  
+  // -----------------------------
+  // Fallback if empty
+  // -----------------------------
+  const strengths = positiveSummary || "Not enough positive feedback to generate insights.";
+  const improvements = negativeSummary || "No major issues reported by users.";
+
+  // -----------------------------
+  // Save insights
+  // -----------------------------
   space.insights = {
-    strengths,
-    improvements,
+    strengths: String(strengths),
+    improvements: String(improvements),
     lastGeneratedAt: new Date(),
   };
 
@@ -386,6 +383,10 @@ const negativeText = negative.join(" ");
     new ApiResponse(200, space.insights, "Insights generated successfully")
   );
 });
+
+
+
+
 
 
 

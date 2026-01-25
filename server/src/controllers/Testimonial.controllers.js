@@ -7,6 +7,7 @@ import { uploadOnCloudinary } from "../utils/cloudinary.js";
 import mongoose from "mongoose";
 import { extractTweetId } from "../utils/extractTweetId.js";
 import { fetchTweetById } from "../utils/twitterService.js";
+import {fetchRedditPostByUrl} from "../utils/RedditService.js";
 import { analyzeSentiment } from "../utils/sentiment.js";
 import {detectSpam} from "../utils/spamDetector.js"
 import { generateEmailToken , sendVerificationEmail } from "../utils/email.js";
@@ -71,7 +72,6 @@ const getAllTestimonial = asyncHandler(async (req, res) => {
     data: result,
   });
 });
-
 const createTestimonial = asyncHandler(async (req, res) => {
   const { spaceId } = req.params;
   const { name, email, text, rating } = req.body;
@@ -229,7 +229,6 @@ sendVerificationEmail(email, emailToken).catch(err =>
 
 
 
-
 const importTweetAsTestimonial = asyncHandler(async (req, res) => {
 
   await new Promise((resolve) => setTimeout(resolve , 10000))
@@ -282,6 +281,62 @@ const importTweetAsTestimonial = asyncHandler(async (req, res) => {
   );
 });
 
+ const importRedditAsTestimonial = asyncHandler(async (req, res) => {
+  const { spaceId } = req.params;
+  const { redUrl } = req.body;
+
+ 
+  if (!redUrl || !spaceId) {
+    throw new ApiError(400, "Reddit URL and Space ID are required!");
+  }
+
+  if (!mongoose.Types.ObjectId.isValid(spaceId)) {
+    throw new ApiError(400, "Invalid Space ID");
+  }
+
+ 
+  const space = await Spaces.findOne({ _id: spaceId, user: req.user?._id });
+  if (!space) {
+    throw new ApiError(403, "You are not authorized to add testimonials to this space.");
+  }
+
+
+  if (!/^https?:\/\/(www\.)?reddit\.com\/r\/[^/]+\/comments\/[^/]+/i.test(redUrl)) {
+    throw new ApiError(400, "Invalid Reddit post URL format");
+  }
+
+
+  let redditPost;
+  try {
+    redditPost = await fetchRedditPostByUrl(redUrl);
+  } catch (err) {
+    throw new ApiError(400, `Failed to fetch Reddit post: ${err.message}`);
+  }
+
+  // Save as testimonial
+  const testimonial = await Testimonial.create({
+    space: spaceId,
+    text: redditPost.text || redditPost.title,
+    avatar: null, // Reddit doesn’t provide user avatars by default
+    sourceType: "reddit",
+    redditData: {
+      postId: redditPost.postId,
+      subreddit: redditPost.subreddit,
+      author: redditPost.author,
+      originalPostUrl: redditPost.permalink,
+      title: redditPost.title,
+      text: redditPost.text,
+      upvotes: redditPost.upvotes,
+      commentsCount: redditPost.commentsCount,
+      thumbnail: redditPost.thumbnail,
+      media: redditPost.media || [],
+    },
+  });
+
+  return res.status(201).json(
+    new ApiResponse(201, testimonial, "Reddit post imported successfully")
+  );
+});
 
 
 const getTestimonialById = asyncHandler(async (req, res) => {
@@ -317,9 +372,6 @@ const getTestimonialById = asyncHandler(async (req, res) => {
       )
     );
 });
-
-
-
 
 const deleteTestimonial = asyncHandler(async (req, res) => {
 
@@ -374,8 +426,6 @@ const deleteTestimonial = asyncHandler(async (req, res) => {
     new ApiResponse(200, null, "Testimonial deleted successfully")
   );
 });
-
-
 const updateTestimonial = asyncHandler(async(req , res) => {
     const {TestimonialId} = req.params;
     if(!TestimonialId){
@@ -661,6 +711,7 @@ getAllTestimonial,
 likecontroller,
 getTestimonialById,
 importTweetAsTestimonial,
+importRedditAsTestimonial,
 verifyEmail,
 toggleFeaturedTestimonial
 }

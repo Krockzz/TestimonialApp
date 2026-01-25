@@ -27,6 +27,7 @@ import TestimonialCard from "../components/TestimonialCard";
 import Integration from "../components/Integration";
 import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import { MdOutlineAnalytics } from "react-icons/md";
 
 const API_URI = import.meta.env.VITE_API_URL;
 
@@ -55,21 +56,27 @@ export async function loader({ request, params }) {
   const docs = testimonialData.data.docs;
 
   return json({
-    spaceData,
-    customerTestimonials: docs.filter(t => t.sourceType !== "twitter"),
-    twitterTestimonials: docs.filter(t => t.sourceType === "twitter"),
-  });
+  spaceData,
+  customerTestimonials: docs.filter(
+    t => t.sourceType !== "twitter" && t.sourceType !== "reddit"
+  ),
+  twitterTestimonials: docs.filter(
+    t => t.sourceType === "twitter" || t.sourceType === "reddit"
+  ),
+});
+
 }
 
-/* ---------------- ACTION ---------------- */
 
 export async function action({ request, params }) {
   const cookieHeader = request.headers.get("Cookie");
   const data = await request.formData();
   const spaceId = params.id;
 
-  if (data.get("intent") === "importTweet") {
-    const tweetUrl = data.get("tweetUrl");
+  if (data.get("intent") === "importTweet" || data.get("intent") === "importReddit") {
+
+    if(data.get("intent") === "importTweet"){
+    const tweetUrl = data.get("twitterUrl");
 
     await fetch(
       `${API_URI}/api/v1/users/Testimonial/import-twitter/${spaceId}`,
@@ -85,6 +92,27 @@ export async function action({ request, params }) {
 
     return redirect(`/space/${spaceId}`);
   }
+
+  else {
+    const redUrl = data.get("redditUrl");
+    console.log("So the reddit URL is" , redUrl);
+
+    await fetch(
+      `${API_URI}/api/v1/users/Testimonial/import-reddit/${spaceId}`, {
+        method : "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Cookie: cookieHeader,
+        },
+        body: JSON.stringify({ redUrl, spaceId }),  
+        }
+      
+    );
+
+    return redirect(`/space/${spaceId}`);
+
+  }
+}
 
   const testimonialId = data.get("testimonialId");
 
@@ -102,8 +130,6 @@ export async function action({ request, params }) {
 
   return redirect(`/space/${spaceId}`);
 }
-
-
 
 export default function TestimonialsOnly() {
   const { spaceData, customerTestimonials, twitterTestimonials } =
@@ -143,6 +169,7 @@ export default function TestimonialsOnly() {
     <section className="min-h-screen bg-gray-950 text-white py-8">
       <hr className="border-t border-gray-700 mb-6" />
 
+      {/* Header */}
       <div className="w-full flex items-center justify-between px-6 mb-6">
         <div className="flex items-center gap-4">
           <img
@@ -161,9 +188,11 @@ export default function TestimonialsOnly() {
 
       <hr className="border-t border-gray-700 mb-6" />
 
-      <div className="flex gap-6 px-6">
-        {/* ---------------- SIDEBAR ---------------- */}
-        <aside className="w-56">
+      {/* MAIN LAYOUT */}
+      {/* 🔥 FIX: items-start so height grows naturally */}
+      <div className="flex items-start gap-6 px-6">
+        {/* Sidebar */}
+        <aside className="w-56 shrink-0">
           <h2 className="font-bold text-xl mb-4">Inbox</h2>
 
           {filters.map(({ label, icon: Icon }) => (
@@ -185,7 +214,6 @@ export default function TestimonialsOnly() {
             </button>
           ))}
 
-          {/* -------- INTEGRATIONS -------- */}
           <Accordion
             title="Integrations"
             open={showIntegrations}
@@ -198,7 +226,6 @@ export default function TestimonialsOnly() {
             setActivePanel={setActivePanel}
           />
 
-          {/* -------- EMBED -------- */}
           <Accordion
             title="Embed"
             icon={Layers}
@@ -215,38 +242,34 @@ export default function TestimonialsOnly() {
             }}
           />
 
-          {/* -------- PAGES -------- */}
           <Accordion
             title="Pages"
             icon={Globe}
             open={showPages}
             toggle={setShowPages}
             items={[
-              ["Public Page", "public-page" , [GiSelfLove]],
-              ["Request Testimonial", "req-testi" , [IoArrowRedoCircleSharp]],
+              ["Public Page", "public-page", [GiSelfLove]],
+              ["Request Testimonial", "req-testi", [IoArrowRedoCircleSharp]],
             ]}
             activePanel={activePanel}
             setActivePanel={setActivePanel}
           />
 
-          {/* -------- ANALYTICS -------- */}
           <Accordion
             title="Analytics"
             icon={BarChart3}
             open={showAnalytics}
             toggle={setShowAnalytics}
             items={[
-              ["Overview", "analytics-overview"],
-              ["Sources", "analytics-sources"],
-              ["Engagement", "analytics-engagement"],
+              ["Metrics", "analytics-overview" , [MdOutlineAnalytics]],
             ]}
             activePanel={activePanel}
             setActivePanel={setActivePanel}
           />
         </aside>
 
-        {/* ---------------- MAIN ---------------- */}
-        <div className="flex-1">
+
+        <div className="flex-1 w-full">
           <AnimatePresence mode="wait">
             <motion.div
               key={activePanel + filter}
@@ -254,7 +277,7 @@ export default function TestimonialsOnly() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
               transition={{ duration: 0.3 }}
-              className="space-y-4"
+              className="space-y-4 w-full h-auto"
             >
               {activePanel === "integration" && (
                 <Integration
@@ -266,13 +289,10 @@ export default function TestimonialsOnly() {
               {activePanel === "public-page" && (
                 <WallOfLovePanel spaceId={space._id} />
               )}
-              {
-                activePanel ==="req-testi" && (
-                  <RequestTestimonial spaceId={space._id} />
-                )
-              }
 
-              
+              {activePanel === "req-testi" && (
+                <RequestTestimonial spaceId={space._id} />
+              )}
 
               {activePanel === "testimonials" &&
                 filteredTestimonials.map(t => (
@@ -300,7 +320,7 @@ export default function TestimonialsOnly() {
   );
 }
 
-
+/* ---------------- Accordion ---------------- */
 
 function Accordion({
   title,
@@ -350,5 +370,4 @@ function Accordion({
     </div>
   );
 }
-
 

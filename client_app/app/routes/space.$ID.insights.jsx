@@ -6,7 +6,6 @@ import { requireUser } from "../../../utilities/requireUser";
 
 const API_URI = import.meta.env.VITE_API_URL;
 
-/* ---------------- LOADER ---------------- */
 
 export async function loader({ request, params }) {
   await requireUser(request); // auth guard
@@ -132,7 +131,7 @@ return (
           />
 
           <InsightCard
-            title="Improvements"
+            title="Customer Concerns"
             icon="⚠️"
             points={improvementPoints}
             accent="from-orange-500/20 to-transparent"

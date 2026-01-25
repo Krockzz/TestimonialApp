@@ -1,31 +1,34 @@
+import plugin from "tailwindcss/plugin";
+
 export default {
   darkMode: "class",
   content: ["./app/**/{**,.client,.server}/**/*.{js,jsx,ts,tsx}"],
+
   theme: {
     extend: {
       animation: {
-        'fade-in': 'fadeIn 1s ease-out forwards',
-        'fade-in-up': 'fadeInUp 1s ease-out forwards',
-        'dot-bounce': 'dotBounce 1.2s infinite ease-in-out',
-        'fade-slide-down': 'fade-slide-down 0.5s ease-out forwards',
-        'shimmer': 'shimmer 2s infinite', // ✅ added shimmer animation
+        "fade-in": "fadeIn 1s ease-out forwards",
+        "fade-in-up": "fadeInUp 1s ease-out forwards",
+        "dot-bounce": "dotBounce 1.2s infinite ease-in-out",
+        "fade-slide-down": "fade-slide-down 0.5s ease-out forwards",
+        shimmer: "shimmer 2s infinite",
       },
       keyframes: {
         fadeIn: {
-          '0%': { opacity: 0 },
-          '100%': { opacity: 1 },
+          "0%": { opacity: 0 },
+          "100%": { opacity: 1 },
         },
         fadeInUp: {
-          '0%': { opacity: 0, transform: 'translateY(20px)' },
-          '100%': { opacity: 1, transform: 'translateY(0)' },
+          "0%": { opacity: 0, transform: "translateY(20px)" },
+          "100%": { opacity: 1, transform: "translateY(0)" },
         },
         dotBounce: {
-          '0%, 80%, 100%': { transform: 'scale(0)' },
-          '40%': { transform: 'scale(1)' },
+          "0%, 80%, 100%": { transform: "scale(0)" },
+          "40%": { transform: "scale(1)" },
         },
-        shimmer: { // ✅ added shimmer keyframes
-          '0%': { transform: 'translateX(-100%)' },
-          '100%': { transform: 'translateX(100%)' },
+        shimmer: {
+          "0%": { transform: "translateX(-100%)" },
+          "100%": { transform: "translateX(100%)" },
         },
       },
       dropShadow: {
@@ -45,5 +48,18 @@ export default {
       },
     },
   },
-  plugins: [],
-}
+
+  plugins: [
+    plugin(function ({ addUtilities }) {
+      addUtilities({
+        ".scrollbar-hide": {
+          "-ms-overflow-style": "none",
+          "scrollbar-width": "none",
+        },
+        ".scrollbar-hide::-webkit-scrollbar": {
+          display: "none",
+        },
+      });
+    }),
+  ],
+};

@@ -1,7 +1,7 @@
 import { Router } from "express";
 // import { verify } from "jsonwebtoken";
 import { verifyJwt } from "../middlewares/auth.middlewares.js";
-import { createTestimonial, deleteTestimonial, getAllTestimonial, getTestimonialById, likecontroller, updateTestimonial , importTweetAsTestimonial, verifyEmail, toggleFeaturedTestimonial } from "../controllers/Testimonial.controllers.js";
+import { createTestimonial, deleteTestimonial, getAllTestimonial, getTestimonialById, likecontroller, updateTestimonial , importTweetAsTestimonial, verifyEmail, toggleFeaturedTestimonial, importRedditAsTestimonial } from "../controllers/Testimonial.controllers.js";
 import { upload } from "../middlewares/multer.middleware.js";
 
 const router = Router()
@@ -26,6 +26,7 @@ router.route("/create-Testimonial/:spaceId").post( verifyJwt ,upload.fields(
     
 ) , createTestimonial)
 router.route("/import-twitter/:spaceId").post(verifyJwt , importTweetAsTestimonial)
+router.route("/import-reddit/:spaceId").post(verifyJwt , importRedditAsTestimonial)
 router.route("/delete/:TestimonialId").post( verifyJwt , deleteTestimonial)
 router.route("/update-Testimonial/:TestimonialId").patch(verifyJwt , updateTestimonial)
 router.route("/getTestimonials/:spaceId").get(verifyJwt , getAllTestimonial)

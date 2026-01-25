@@ -1,57 +1,29 @@
 import { useState } from "react";
 import { Download, Heart, Star, ChevronUp } from "lucide-react";
 import { FaXTwitter, FaReddit } from "react-icons/fa6";
-import { Linkedin, Instagram  } from "lucide-react";
 import dayjs from "dayjs";
 import { motion, AnimatePresence } from "framer-motion";
-import ImportFromTwitterModal from "../components/IntegrationModal.jsx";
-import ConfirmModal from "./ConfirmModal.jsx";
 import { useSubmit } from "@remix-run/react";
 
-export default function Integration({ twitterTestimonials }) {
+import IntegrationModal from "../components/IntegrationModal.jsx";
+import ConfirmModal from "./ConfirmModal.jsx";
+
+export default function Integration({
+  twitterTestimonials = [],
+  redditTestimonials = [],
+}) {
   const [activePlatform, setActivePlatform] = useState("twitter");
   const [showIntegrationModal, setShowIntegrationModal] = useState(false);
-
+  const [integrationPlatform, setIntegrationPlatform] = useState(null);
   const [expandedCardId, setExpandedCardId] = useState(null);
   const [testimonialToDelete, setTestimonialToDelete] = useState(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
 
+  const submit = useSubmit();
+
   const toggleExpand = (id) => {
     setExpandedCardId((prev) => (prev === id ? null : id));
   };
-
-  const platforms = [
-    { label: "Twitter", icon: <FaXTwitter size={20} />, key: "twitter" },
-    { label: "Reddit", icon: <FaReddit size={20} />, key: "reddit" },
-    // { label: "Instagram", icon: <Instagram size={20} />, key: "instagram" },
-  ];
-
-  const renderPlatformButtons = (size = "md") => (
-    <div
-      className={`flex flex-wrap gap-2 ${
-        size === "center" ? "justify-center mt-4" : "justify-start mb-4"
-      }`}
-    >
-      {platforms.map((p) => (
-        <button
-          key={p.key}
-          onClick={() => {
-            setActivePlatform(p.key);
-            if (p.key === "twitter") setShowIntegrationModal(true);
-            // if(p.key ===) "reddit"
-          }}
-          className={`flex items-center space-x-2 bg-gray-800 border border-gray-600 hover:bg-gray-700 text-white px-3 py-1 rounded-md transition text-sm ${
-            size === "center" ? "px-4 py-2" : ""
-          }`}
-        >
-          {p.icon}
-          <span>{p.label}</span>
-        </button>
-      ))}
-    </div>
-  );
-
-  const submit = useSubmit();
 
   const handleToDelete = (testimonial) => {
     setTestimonialToDelete(testimonial);
@@ -74,180 +46,251 @@ export default function Integration({ twitterTestimonials }) {
     setConfirmDelete(false);
   };
 
+  const platforms = [
+    { label: "Twitter", icon: <FaXTwitter size={18} />, key: "twitter" },
+    { label: "Reddit", icon: <FaReddit size={18} />, key: "reddit" },
+  ];
+
+  const renderPlatformButtons = (size = "md") => (
+    <div
+      className={`flex flex-wrap gap-3 ${
+        size === "center" ? "justify-center mt-4" : "justify-start mb-5"
+      }`}
+    >
+      {platforms.map((p) => (
+        <button
+          key={p.key}
+          onClick={() => {
+            setActivePlatform(p.key);
+            setIntegrationPlatform(p.key);
+            setShowIntegrationModal(true);
+          }}
+          className="flex items-center gap-2 rounded-lg border border-gray-700 
+          bg-gray-900 hover:bg-gray-800 transition px-4 py-2 text-sm"
+        >
+          {p.icon}
+          <span>{p.label}</span>
+        </button>
+      ))}
+    </div>
+  );
+
+  /* ----------- DATA NORMALIZATION ----------- */
+
+  const getAvatar = (t) => {
+    if (t.sourceType === "twitter") return t.avatar;
+    if (t.sourceType === "reddit") return t.redditData?.thumbnail || null;
+    return null;
+  };
+
+  const getName = (t) => {
+    if (t.sourceType === "twitter") return t.twitterData.twitterName;
+    if (t.sourceType === "reddit") return t.redditData?.author;
+    return "Anonymous";
+  };
+
+  const getHandle = (t) => {
+    if (t.sourceType === "twitter")
+      return `@${t.twitterData.twitterHandle}`;
+    if (t.sourceType === "reddit")
+      return `r/${t.redditData?.subreddit}`;
+    return "";
+  };
+
+  const getLikes = (t) => {
+    if (t.sourceType === "twitter") return t.twitterData.likeCount;
+    if (t.sourceType === "reddit") return t.redditData?.upvotes || 0;
+    return 0;
+  };
+
+  const getText = (t) => {
+    if (t.sourceType === "reddit")
+      return t.redditData?.text || t.text;
+    return t.text;
+  };
+
+  const getSourceIcon = (t) => {
+    if (t.sourceType === "twitter") return <FaXTwitter size={14} />;
+    if (t.sourceType === "reddit") return <FaReddit size={14} />;
+    return null;
+  };
+
+  const testimonials =
+    activePlatform === "twitter"
+      ? twitterTestimonials
+      : redditTestimonials;
+
+  /* ---------------- UI ---------------- */
+
   return (
-    <div className="min-h-screen bg-gray-950 text-white flex flex-col px-6 py-6">
+    <div className="w-full h-auto bg-gray-950 text-white flex flex-col px-6 py-6">
       {/* Header */}
-      <div className="text-3xl font-bold mb-3">Social media testimonials</div>
-      <p className="text-muted-foreground mb-10 max-w-md">
+      <div className="text-3xl font-bold mb-2">
+        Social media testimonials
+      </div>
+      <p className="text-gray-400 mb-10 max-w-md">
         Import and track testimonials across social media.
       </p>
 
       <AnimatePresence mode="wait">
-        {activePlatform === "twitter" ? (
-          twitterTestimonials.length === 0 ? (
-            // Empty state
+        {testimonials.length === 0 ? (
+          /* ---------- EMPTY STATE ---------- */
+          <motion.div
+            key="empty"
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="flex flex-col items-center justify-center gap-6 py-24"
+          >
             <motion.div
-              key="empty"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.5, ease: "easeInOut" }}
-              className="flex flex-col items-center justify-center gap-6 py-20"
+              animate={{ scale: [1, 1.15, 1] }}
+              transition={{ repeat: Infinity, duration: 1.6 }}
             >
-              <motion.div
-                initial={{ scale: 0 }}
-                animate={{ scale: [1, 1.2, 1] }}
-                transition={{ repeat: Infinity, duration: 1.5 }}
-              >
-                <Download className="w-12 h-12 text-gray-400" />
-              </motion.div>
-
-              <h2 className="text-xl font-semibold">Import from</h2>
-              <p className="text-sm text-gray-400 text-center max-w-xs">
-                Select a platform to import your social media posts
-              </p>
-
-              {renderPlatformButtons("center")}
+              <Download className="w-14 h-14 text-gray-500" />
             </motion.div>
-          ) : (
-            // Testimonials
-            <motion.div
-              key="cards"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.5, ease: "easeInOut" }}
-              className="flex flex-col"
-            >
-              {/* Small import buttons */}
-              {renderPlatformButtons("small")}
 
-              {/* Horizontal Cards */}
-              <div className="flex gap-4 overflow-x-auto py-4">
-                {twitterTestimonials.map((t) => (
-                 <div
+            <h2 className="text-xl font-semibold">Import from</h2>
+            <p className="text-sm text-gray-400 text-center max-w-xs">
+              Select a platform to import testimonials
+            </p>
+
+            {renderPlatformButtons("center")}
+          </motion.div>
+        ) : (
+          /* ---------- CARDS ---------- */
+          <motion.div
+            key="cards"
+            initial={{ opacity: 0, y: 25 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="flex flex-col"
+          >
+            {renderPlatformButtons("small")}
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 
+                gap-6 items-start auto-rows-min">
+
+              {testimonials.map((t) => (
+               <motion.div
   key={t._id}
-  className="relative bg-gray-900 text-white rounded-xl shadow-lg w-[320px] p-4 flex-shrink-0 flex flex-col space-y-3"
+  layout
+  whileHover={{ scale: 1.02 }}
+  className="relative bg-gray-900 rounded-2xl shadow-xl
+    p-5 w-full flex flex-col h-fit"
 >
-  {/* Top Section */}
-  <div className="flex justify-between items-start">
-    <div className="flex items-center space-x-3">
-      <img
-        src={t.avatar}
-        alt={t.twitterData.twitterName}
-        className="w-10 h-10 rounded-full object-cover"
-      />
-      <div className="flex flex-col">
-        <h3 className="text-sm font-semibold">
-          {t.twitterData.twitterName}
-        </h3>
-        <p className="text-xs text-gray-400">
-          @{t.twitterData.twitterHandle}
-        </p>
-      </div>
-    </div>
-    <div className="flex space-x-2">
-      <Star
-        size={18}
-        className="text-purple-400 cursor-pointer"
-      />
-      <Heart
-        size={18}
-        className="text-red-400 cursor-pointer"
-      />
-    </div>
-  </div>
 
-  {/* Tweet Content */}
-  <p className="text-sm text-gray-200 leading-relaxed whitespace-pre-line">
-    {t.text}
-  </p>
+                  {/* Header */}
+                  <div className="flex justify-between items-start gap-4">
+                    <div className="flex items-center gap-3">
+                      {getAvatar(t) ? (
+                        <img
+                          src={getAvatar(t)}
+                          alt={getName(t)}
+                          className="w-11 h-11 rounded-full object-cover ring-2 ring-gray-700"
+                        />
+                      ) : (
+                        <div
+                          className="w-11 h-11 rounded-full 
+                          bg-gradient-to-br from-indigo-500 to-purple-600
+                          flex items-center justify-center font-bold"
+                        >
+                          {getName(t)?.[0]?.toUpperCase() || "U"}
+                        </div>
+                      )}
 
-  
-
-  {/* Bottom Section */}
-  <div className="flex justify-between items-center pt-2 border-t border-gray-700">
-    <div className="flex items-center space-x-2 text-xs text-gray-400">
-      <Heart size={14} className="text-red-400" />
-      <span>{t.twitterData.likeCount}</span>
-      <span className="ml-2">
-        {dayjs(t.createdAt).format("MMM D, YYYY")}
-      </span>
-    </div>
-
-    <div className="flex items-center space-x-1 text-xs text-gray-400">
-      <span>Imported from:</span>
-      <FaXTwitter size={14} />
-    </div>
-  </div>
-
-  {/* Expand/Collapse Button */}
-  <div className="absolute bottom-3 right-3">
-    <button
-      onClick={() => toggleExpand(t._id)}
-      className="text-gray-300 hover:text-gray-100 transition"
-    >
-      <ChevronUp
-        className={`w-5 h-5 transition-transform duration-300 ${
-          expandedCardId === t._id ? "rotate-180" : ""
-        }`}
-      />
-    </button>
-  </div>
-
-  {/* Expandable Options */}
-  <AnimatePresence>
-    {expandedCardId === t._id && (
-      <motion.div
-        initial={{ opacity: 0, height: 0 }}
-        animate={{ opacity: 1, height: "auto" }}
-        exit={{ opacity: 0, height: 0 }}
-        transition={{ duration: 0.4, ease: "easeInOut" }}
-        className="mt-3 flex justify-center gap-3"
-      >
-        <button className="px-3 py-1 text-xs rounded-md hover:bg-gray-700 transition">
-          Share
-        </button>
-        <button
-          onClick={() => handleToDelete(t)}
-          className="px-3 py-1 text-xs rounded-md hover:bg-gray-700 transition"
-        >
-          Delete
-        </button>
-        <button className="px-3 py-1 text-xs rounded-md hover:bg-gray-700 transition">
-          Download
-        </button>
-      </motion.div>
-    )}
-  </AnimatePresence>
+                      <div>
+                       <div className="text-sm font-semibold break-all leading-tight">
+  {getName(t)}
 </div>
 
-                ))}
-              </div>
-            </motion.div>
-          )
-        ) : (
-          <p className="text-gray-400 text-center w-full">
-            {activePlatform} integration coming soon
-          </p>
+<div className="text-xs text-gray-400 break-all">
+  {getHandle(t)}
+</div>
+                      </div>
+                    </div>
+
+                    <div className="flex gap-2">
+                      <Star className="w-4 h-4 text-purple-400 hover:scale-110 transition" />
+                      <Heart className="w-4 h-4 text-red-400 hover:scale-110 transition" />
+                    </div>
+                  </div>
+
+                  {/* Content */}
+                  <p
+                    className="text-sm text-gray-200 leading-relaxed mt-3
+                    whitespace-pre-wrap break-words"
+                  >
+                    {getText(t)}
+                  </p>
+
+                  {/* Footer */}
+                  <div className="flex justify-between items-center pt-3 mt-4 border-t border-gray-700 text-xs text-gray-400">
+                    <div className="flex items-center gap-2">
+                      <Heart size={13} className="text-red-400" />
+                      <span>{getLikes(t)}</span>
+                      <span>
+                        {dayjs(t.createdAt).format("MMM D, YYYY")}
+                      </span>
+                    </div>
+
+                    {/* Expand Button */}
+                    <button
+                      onClick={() => toggleExpand(t._id)}
+                      className="ml-auto text-gray-400 hover:text-white"
+                    >
+                      <ChevronUp
+                        className={`transition-transform ${
+                          expandedCardId === t._id ? "rotate-180" : ""
+                        }`}
+                      />
+                    </button>
+                  </div>
+
+                  {/* Expand Area */}
+                  <AnimatePresence>
+                    {expandedCardId === t._id && (
+                      <motion.div
+                        layout
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="mt-4 flex justify-center gap-4"
+                      >
+                        <button className="text-xs hover:text-indigo-400">
+                          Share
+                        </button>
+                        <button
+                          onClick={() => handleToDelete(t)}
+                          className="text-xs hover:text-red-400"
+                        >
+                          Delete
+                        </button>
+                        <button className="text-xs hover:text-green-400">
+                          Download
+                        </button>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Modals */}
-      <ImportFromTwitterModal
+      {/* Modal */}
+      <IntegrationModal
         isOpen={showIntegrationModal}
         onClose={() => setShowIntegrationModal(false)}
-        onSubmit={(data) => {
-          console.log("Submitted Tweet Import Data:", data);
-          setShowIntegrationModal(false);
-        }}
+        platform={integrationPlatform}
       />
 
+      {/* Confirm Delete */}
       <ConfirmModal
         isOpen={confirmDelete}
         onClose={() => setConfirmDelete(false)}
         onConfirm={handleConfirmDelete}
-        message="Are you sure you want to delete this testimonial? This action cannot be undone."
+        message="Are you sure you want to delete this testimonial?"
       />
     </div>
   );

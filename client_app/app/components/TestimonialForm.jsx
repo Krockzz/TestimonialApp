@@ -3,6 +3,7 @@ import { FaStar } from "react-icons/fa";
 import { motion, AnimatePresence } from "framer-motion";
 import Lottie from "lottie-react";
 import Uploading from "../../../utilities/Uploading.json";
+import { useSpeechToText } from "../../../utilities/UserSpeechText";
 
 export default function TestimonialForm({ space, rating, setRating, onClose, testimonialType }) {
   const [hover, setHover] = useState(null);
@@ -14,6 +15,7 @@ export default function TestimonialForm({ space, rating, setRating, onClose, tes
   const [uploadedVideoFile, setUploadedVideoFile] = useState(null);
   const [avatarPreview, setAvatarPreview] = useState(null);
   const [recordingTime, setRecordingTime] = useState(0);
+  const [text, setText] = useState("");
 
 
   const timerRef = useRef(null);
@@ -25,6 +27,10 @@ export default function TestimonialForm({ space, rating, setRating, onClose, tes
   const avatarInputRef = useRef(null);
 
   const spaceId = space._id;
+
+  const { start, stop, listening } = useSpeechToText((speech) => {
+  setText((prev) => prev + " " + speech);
+});
 
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -107,6 +113,8 @@ const startRecording = async () => {
 
   const startTime = Date.now();
   const formData = new FormData(e.target);
+
+  
 
   if (recordedVideoBlob) {
     const videoFile = new File([recordedVideoBlob], `testimonial-${Date.now()}.webm`, { type: "video/webm" });
@@ -212,7 +220,7 @@ useEffect(() => {
           ) : (
             <>
               <h2 className="text-xl font-bold text-gray-800 mb-6">
-                {testimonialType === "text"
+                { testimonialType === "text"
                   ? "Write Text Testimonial To"
                   : "Upload Video Testimonial For"}
               </h2>
@@ -229,7 +237,7 @@ useEffect(() => {
                 <input type="hidden" name="type" value={testimonialType} />
                 <input type="hidden" name="rating" value={rating || ""} />
 
-                {/* Rating */}
+              
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-1">Your Rating</label>
                   <div className="flex items-center space-x-1">
@@ -258,14 +266,28 @@ useEffect(() => {
 
                 {/* Textarea or Video */}
                 {testimonialType === "text" ? (
-                  <textarea
-                    name="text"
-                    required
-                    className="w-full p-4 border rounded-xl bg-gray-50 placeholder-gray-400 resize-none shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                    rows={4}
-                    placeholder="Write your testimonial here..."
-                  />
-                ) : (
+  <div className="relative">
+    <textarea
+      name="text"
+      required
+      value={text}
+      onChange={(e) => setText(e.target.value)}
+      className="w-full p-4 border rounded-xl bg-gray-50 placeholder-gray-400 resize-none shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
+      rows={4}
+      placeholder="Write your testimonial here..."
+    />
+    <button
+      type="button"
+      onClick={listening ? stop : start}
+      className={`absolute right-3 bottom-3 p-2 rounded-full ${
+        listening ? "bg-red-600 text-white" : "bg-blue-600 text-white"
+      } hover:scale-110 transition`}
+      title={listening ? "Stop Recording" : "Speak"}
+    >
+      🎤
+    </button>
+  </div>
+) : (
                   <div>
                     {!videoPreview && !recording && (
                       <div

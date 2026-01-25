@@ -71,9 +71,33 @@ const TestimonialSchema = new Schema(
       ]
     },
 
+    redditData: {
+  postId: { type: String },               
+  subreddit: { type: String },            
+  author: { type: String },              
+  originalPostUrl: { type: String },      
+  title: { type: String },               
+  text: { type: String },                
+  upvotes: { type: Number },             
+  commentsCount: { type: Number },        
+  thumbnail: { type: String },            
+  media: [                                
+    {
+      type: {
+        type: String,
+        enum: ["image", "video", "gif"]
+      },
+      url: { type: String },
+      previewImageUrl: { type: String },
+      durationMs: { type: Number }
+    }
+  ]
+},
+
+
     sourceType: {
       type: String,
-      enum: ["customer", "twitter"],
+      enum: ["customer", "twitter" , "reddit"],
       required: true,
       default: "customer"
     },
