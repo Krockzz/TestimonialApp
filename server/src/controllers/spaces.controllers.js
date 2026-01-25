@@ -5,7 +5,7 @@ import { uploadOnCloudinary } from "../utils/cloudinary.js";
 import { Spaces } from "../models/Spaces.models.js";
 import { Testimonial } from "../models/Testimonials.models.js";
 import mongoose from "mongoose";
-import { summarizeText } from "../utils/summarizeText.js";
+import { summarize } from "../utils/summarize.js";
 import { dedupeTexts } from "../utils/duplicate_Text.js";
 
 const getTestimonialCount = async(SpaceId) => {
@@ -351,13 +351,13 @@ const generateSpaceInsights = asyncHandler(async (req, res) => {
   // -----------------------------
   const positiveSummary =
     positiveNeutral.length >= 80
-      ? await summarizeText(positiveNeutral, "strengths")
+      ? await summarize(positiveNeutral, "strengths")
 
       : "";
 
   const negativeSummary =
     negative.length >= 80
-      ? await summarizeText(negative, "improvements")
+      ? await summarize(negative, "improvements")
 
       : "";
 
