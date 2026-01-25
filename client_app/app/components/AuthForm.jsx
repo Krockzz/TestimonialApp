@@ -8,6 +8,8 @@ export default function AuthForm({ type = "register", error }) {
   
   const isRegister = type === "register";
 
+  const API_URL = import.meta.env.VITE_API_URL;
+
   return (
     
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 via-gray-950 to-black px-4">
@@ -116,7 +118,8 @@ export default function AuthForm({ type = "register", error }) {
 
       
       <a
-        href="http://localhost:8000/api/v1/auth/google"
+        href= {`${API_URL}/api/v1/auth/google`}
+        // href="http://localhost:8000/api/v1/auth/google"
         className="flex items-center justify-center gap-3 w-full py-2.5 px-4 rounded-xl shadow-md bg-white text-gray-700 font-medium transition-all duration-300 transform hover:scale-105 hover:shadow-xl active:scale-95"
       >
         <FcGoogle className="text-xl" />
