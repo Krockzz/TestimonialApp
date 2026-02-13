@@ -52,6 +52,7 @@ const TestimonialSchema = new Schema(
       }
     ],
 
+   // Twitter Data Schema
     twitterData: {
       tweetId: { type: String },
       twitterHandle: { type: String },
@@ -71,35 +72,49 @@ const TestimonialSchema = new Schema(
       ]
     },
 
+    // Reddit Data Schema
     redditData: {
-  postId: { type: String },               
-  subreddit: { type: String },            
-  author: { type: String },              
-  originalPostUrl: { type: String },      
-  title: { type: String },               
-  text: { type: String },                
-  upvotes: { type: Number },             
-  commentsCount: { type: Number },        
-  thumbnail: { type: String },            
-  media: [                                
-    {
-      type: {
-        type: String,
-        enum: ["image", "video", "gif"]
-      },
-      url: { type: String },
-      previewImageUrl: { type: String },
-      durationMs: { type: Number }
-    }
-  ]
-},
+      postId: { type: String },
+      subreddit: { type: String },
+      author: { type: String },
+      originalPostUrl: { type: String },
+      title: { type: String },
+      text: { type: String },
+      upvotes: { type: Number },
+      commentsCount: { type: Number },
+      thumbnail: { type: String },
+      media: [
+        {
+          type: {
+            type: String,
+            enum: ["image", "video", "gif"]
+          },
+          url: { type: String },
+          previewImageUrl: { type: String },
+          durationMs: { type: Number }
+        }
+      ]
+    },
+    // YouTube Data Schema
+    youtubeData: {
+      videoId: { type: String, index: true },
+      title: { type: String },
+      channelName: { type: String },
+      description: { type: String },
+      thumbnail: { type: String },
+      durationSec: { type: Number },
+      originalVideoUrl: { type: String },
+      publishedAt: { type: Date },
+      upvotes: { type: Number},
+    },
 
-
+  
     sourceType: {
       type: String,
-      enum: ["customer", "twitter" , "reddit"],
+      enum: ["customer", "twitter", "reddit", "youtube"],
       required: true,
-      default: "customer"
+      default: "customer",
+      index: true
     },
 
     sentiment: {
@@ -113,12 +128,11 @@ const TestimonialSchema = new Schema(
 
     status: {
       type: String,
-      enum: ["active", "spam", "deleted"],
+      enum: ["active", "spam", "deleted", "Pending_Verification"],
       default: "active",
       index: true
     },
 
-    
     featured: {
       enabled: {
         type: Boolean,
@@ -144,7 +158,8 @@ const TestimonialSchema = new Schema(
       verified: { type: Boolean, default: false },
       token: { type: String },
       sentAt: { type: Date },
-      verifiedAt: { type: Date }
+      verifiedAt: { type: Date },
+      expiresAt: {type: Date},
     },
 
     submissionMeta: {
@@ -153,6 +168,12 @@ const TestimonialSchema = new Schema(
     }
   },
   { timestamps: true }
+);
+
+
+TestimonialSchema.index(
+  { "youtubeData.videoId": 1, space: 1 },
+  { unique: true, sparse: true }
 );
 
 TestimonialSchema.plugin(mongooseAggregatePaginate);

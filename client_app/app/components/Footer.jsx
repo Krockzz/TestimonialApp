@@ -15,7 +15,6 @@ export default function Footer() {
           </p>
         </div>
 
-        {/* Social Links */}
         <div data-aos="fade-up" data-aos-delay="100">
           <h3 className="text-2xl font-bold text-blue-400 mb-4">Follow Us</h3>
           <div className="flex justify-center gap-6">
@@ -55,18 +54,7 @@ export default function Footer() {
       </div>
  
     <div className="flex , space-x-5 , p-2">
-     <iframe src="http://localhost:5173/69033653498641a3be5e84e1/embed?borderColor=%239CA3AF&borderWidth=8&borderRadius=20px&textColor=%233B82F6&fontFamily=serif&designStyle=center&cardColor=%231F2937&backgroundColor=%23ffffff" width="400" height="300" style={{border: "none"}} loading="lazy"></iframe>
-
-    <iframe
-  src="http://localhost:5173/widget/687f41755a6eba0151189d9a"
-  style= {{border : "none"}}
-  width = "400"
-  height = "510"
-  loading="lazy">
-</iframe>
-
-
-    </div>
+</div>
 
 
       

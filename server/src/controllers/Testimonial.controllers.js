@@ -11,7 +11,11 @@ import {fetchRedditPostByUrl} from "../utils/RedditService.js";
 import { analyzeSentiment } from "../utils/sentiment.js";
 import {detectSpam} from "../utils/spamDetector.js"
 import { generateEmailToken , sendVerificationEmail } from "../utils/email.js";
-
+import {
+  extractYouTubeVideoId,
+  fetchYouTubeVideoById,
+  parseISODurationToSeconds
+} from "../utils/youtube.js";
 
 const getAllTestimonial = asyncHandler(async (req, res) => {
   const { spaceId } = req.params;
@@ -72,6 +76,7 @@ const getAllTestimonial = asyncHandler(async (req, res) => {
     data: result,
   });
 });
+
 const createTestimonial = asyncHandler(async (req, res) => {
   const { spaceId } = req.params;
   const { name, email, text, rating } = req.body;
@@ -140,7 +145,7 @@ const createTestimonial = asyncHandler(async (req, res) => {
       const sentiment = await analyzeSentiment(text);
 
       sentimentData = {
-        label: sentiment.label, // POSITIVE | NEGATIVE | NEUTRAL
+        label: sentiment.label,
         score: sentiment.score,
         processed: true
       };
@@ -173,6 +178,13 @@ const createTestimonial = asyncHandler(async (req, res) => {
     existingTexts
   });
 
+  let curr_Status = "Pending_Verification";
+
+  if(spamResult.status === "spam"){
+    curr_Status = "spam"
+
+  }
+
 
   const testimonial = await Testimonial.create({
     space: spaceId,
@@ -185,7 +197,7 @@ const createTestimonial = asyncHandler(async (req, res) => {
     sentiment: sentimentData,
 
     
-    status: spamResult.status,
+    status: curr_Status,
     spam: spamResult.spam
   });
 
@@ -194,7 +206,7 @@ const createTestimonial = asyncHandler(async (req, res) => {
 testimonial.emailVerification = {
   token: emailToken,
   sentAt: new Date(),
-  expiresAt: new Date(Date.now() + 5 * 60 *  1000),
+  expiresAt: new Date(Date.now() +  30 *  1000),
   verified: false
 };
 
@@ -235,7 +247,6 @@ const importTweetAsTestimonial = asyncHandler(async (req, res) => {
   const {spaceId} = req.params;
   const { tweetUrl } = req.body;
 
-  // Validate inputs
   if (!tweetUrl || !spaceId) {
     throw new ApiError(400, "Tweet URL and Space ID are required!");
   }
@@ -244,24 +255,20 @@ const importTweetAsTestimonial = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Invalid Space ID");
   }
 
-  // Ensure the space belongs to the current user
   const space = await Spaces.findOne({ _id: spaceId, user: req.user?._id });
   if (!space) {
     throw new ApiError(403, "You are not authorized to add testimonials to this space.");
   }
 
-  // Extract Tweet ID
   const tweetId = extractTweetId(tweetUrl);
   if (!tweetId) {
     throw new ApiError(400, "Invalid tweet URL format");
   }
 
-  // Fetch tweet data from Twitter API
   const tweetData = await fetchTweetById(tweetId);
   const tweet = tweetData.data;
   const user = tweetData.includes.users[0];
 
-  // Save the tweet as a testimonial
   const testimonial = await Testimonial.create({
     space: spaceId,
     text: tweet.text,
@@ -317,7 +324,7 @@ const importTweetAsTestimonial = asyncHandler(async (req, res) => {
   const testimonial = await Testimonial.create({
     space: spaceId,
     text: redditPost.text || redditPost.title,
-    avatar: null, // Reddit doesn’t provide user avatars by default
+    avatar: null, 
     sourceType: "reddit",
     redditData: {
       postId: redditPost.postId,
@@ -350,14 +357,12 @@ const getTestimonialById = asyncHandler(async (req, res) => {
     throw new ApiError(400, "This field is required!");
   }
 
-  // Populate the related Space to access its avatar
   const testimonial = await Testimonial.findById(TestiId).populate("space");
 
   if (!testimonial) {
     throw new ApiError(400, "Testimonial doesn't exist!");
   }
 
-  // If testimonial doesn't have an avatar, fallback to space's avatar
   if (!testimonial.avatar && testimonial.space?.avatar) {
     testimonial.avatar = testimonial.space.avatar;
   }
@@ -594,59 +599,75 @@ const verifyEmail = asyncHandler(async (req, res) => {
   });
 
   if (!testimonial) {
-    throw new ApiError(400, "Invalid or expired token");
+    throw new ApiError(400, "Invalid or expired verification token");
   }
 
-  // Already verified
   if (testimonial.emailVerification.verified) {
     return res.json({
       success: true,
-      message: "Email already verified"
+      message: "Email already verified",
+      status: testimonial.status
     });
   }
 
   const now = new Date();
-  const sentAt = testimonial.emailVerification.sentAt;
+  const { expiresAt } = testimonial.emailVerification;
+  const isExpired = now > expiresAt;
 
-  const FIVE_MINUTES = 5 * 60 * 1000;
-  const isExpired = sentAt && now - sentAt > FIVE_MINUTES;
 
-  
-  testimonial.emailVerification.verified = true;
-  testimonial.emailVerification.verifiedAt = now;
-
-  
   if (isExpired) {
-    const reason = "Email verification exceeded 5 minutes";
+    const reason = "Email verification expired";
 
     if (!testimonial.spam.reasons.includes(reason)) {
       testimonial.spam.reasons.push(reason);
     }
 
     testimonial.spam.score = Math.max(testimonial.spam.score, 5);
+    testimonial.status = "spam";
 
-    if (testimonial.spam.score >= 5) {
-      testimonial.status = "spam";
-    }
-  } else {
- 
-    testimonial.spam.score = Math.max(0, testimonial.spam.score - 2);
+    testimonial.emailVerification.verified = false;
+    testimonial.emailVerification.token = undefined;
 
-    if (testimonial.spam.score < 5) {
-      testimonial.status = "active";
-    }
+    await testimonial.save();
+
+    return res.json({
+      success: false,
+      status: testimonial.status,
+      spamScore: testimonial.spam.score,
+      message: "Verification link expired. Testimonial marked as spam."
+    });
+  }
+
+
+  testimonial.emailVerification.verified = true;
+  testimonial.emailVerification.verifiedAt = now;
+  testimonial.emailVerification.token = undefined;
+
+  testimonial.spam.score = Math.max(0, testimonial.spam.score - 2);
+
+  if (testimonial.spam.score < 5) {
+    testimonial.status = "active";
   }
 
   await testimonial.save();
 
+  if (
+    testimonial.status === "active" &&
+    testimonial.sentiment?.processed &&
+    testimonial.sentiment?.label
+  ) {
+    const sentimentField = `sentimentStats.${testimonial.sentiment.label}`;
+    await Spaces.findByIdAndUpdate(
+      testimonial.space,
+      { $inc: { [sentimentField]: 1 } }
+    );
+  }
+
   res.json({
     success: true,
-    verifiedLate: isExpired,
     status: testimonial.status,
     spamScore: testimonial.spam.score,
-    message: isExpired
-      ? "Email verified, but verification was delayed."
-      : "Email verified successfully"
+    message: "Email verified successfully"
   });
 });
 
@@ -697,6 +718,64 @@ const toggleFeaturedTestimonial = asyncHandler(async (req, res) => {
   });
 });
 
+const importYouTubeVideoAsTestimonial = asyncHandler(async (req, res) => {
+  const { spaceId } = req.params;
+  const { videoUrl } = req.body;
+
+  if (!videoUrl) {
+    throw new ApiError(400, "Video URL not provided");
+  } else if (!spaceId) {
+    throw new ApiError(400, "Space ID is required");
+  }
+
+  if (!mongoose.Types.ObjectId.isValid(spaceId)) {
+    throw new ApiError(400, "Invalid Space ID");
+  }
+
+  const space = await Spaces.findOne({
+    _id: spaceId,
+    user: req.user?._id
+  });
+
+  if (!space) {
+    throw new ApiError(
+      403,
+      "You are not authorized to add testimonials to this space."
+    );
+  }
+
+  const videoId = extractYouTubeVideoId(videoUrl);
+  if (!videoId) {
+    throw new ApiError(400, "Invalid YouTube URL format");
+  }
+
+
+  const video = await fetchYouTubeVideoById(videoId);
+
+  console.log("Fetched YouTube video:", video);
+
+ 
+  const testimonial = await Testimonial.create({
+    space: spaceId,
+    sourceType: "youtube",
+    youtubeData: {
+      videoId: video.id,
+      title: video.snippet.title,
+      channelName: video.snippet.channelTitle,
+      description: video.snippet.description,
+      thumbnail: video.snippet.thumbnails?.high?.url,
+      durationSec: parseISODurationToSeconds(video.contentDetails.duration),
+      originalVideoUrl: videoUrl,
+      publishedAt: video.snippet.publishedAt,
+      upvotes: video.likeCount || 0 
+    }
+  });
+
+  return res.status(201).json(
+    new ApiResponse(201, testimonial, "YouTube video imported successfully")
+  );
+});
+
 
 
 
@@ -713,5 +792,6 @@ getTestimonialById,
 importTweetAsTestimonial,
 importRedditAsTestimonial,
 verifyEmail,
-toggleFeaturedTestimonial
+toggleFeaturedTestimonial,
+importYouTubeVideoAsTestimonial
 }

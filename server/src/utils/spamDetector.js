@@ -30,14 +30,14 @@ export function detectSpam({
   }
 
   if (containsLinkOrContact(text)) {
-    score += 3;
+    score += 5;
     reasons.push("Contains link or contact information");
   }
 
  
   if (
     text &&
-    text.trim().length < 5 &&
+    text.trim().length <= 8 &&
     sentimentLabel === "POSITIVE"
   ) {
     score += 3;
@@ -46,7 +46,7 @@ export function detectSpam({
 
  
   if (isDuplicateText(text, existingTexts)) {
-    score += 4;
+    score += 5;
     reasons.push("Duplicate testimonial content");
   }
 

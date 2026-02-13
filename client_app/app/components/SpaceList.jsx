@@ -9,6 +9,9 @@ import ConfirmModal from "./ConfirmModal";
 import { IoMdAdd } from "react-icons/io";
 import toast from "react-hot-toast";
 import { FaSquarespace } from "react-icons/fa";
+import { useNavigate } from "@remix-run/react";
+import Arrow_Loading from "../../../utilities/Arrow_Loading.json"
+import Lottie from "lottie-react";
 
 
 
@@ -17,6 +20,9 @@ export default function SpacesList({ spaces }) {
   const [openMenuId, setOpenMenuId] = useState(null);
   const [showConfirm, setShowConfirm] = useState(false);
   const [spaceToDelete, setSpaceToDelete] = useState(null);
+  const[loadingSpaceId , setisLoadingSpaceId] = useState(false);
+
+  const navigate = useNavigate();
   
   const submit = useSubmit();
 
@@ -54,6 +60,18 @@ export default function SpacesList({ spaces }) {
     setShowConfirm(false);
     setSpaceToDelete(null);
   };
+
+  const handleInsightsClick = (spaceId) => {
+  setisLoadingSpaceId(spaceId);
+
+  setTimeout(() => {
+    navigate(`/space/${spaceId}/insights`);
+  }, 8000); 
+};
+
+
+  
+  
 
  return (
   <>
@@ -137,14 +155,17 @@ export default function SpacesList({ spaces }) {
                           <span>Edit Space</span>
                         </Link>
 
-                        <Link
-                          to={`/space/${space._id}/insights`}
-                          className="flex items-center w-full px-4 py-2 text-sm hover:bg-gray-800 gap-2"
-                          onClick={() => setOpenMenuId(null)}
-                           >
-                        <FaSquarespace size={18} />
-                          <span>Space Insights</span>
-                        </Link>
+                       <button
+                        onClick={() => {
+                        setOpenMenuId(null);
+                         handleInsightsClick(space._id);
+                         }}
+                         className="flex items-center w-full px-4 py-2 text-sm hover:bg-gray-800 gap-2"
+                       >
+                   <FaSquarespace size={18} />
+               <span>Space Insights</span>
+              </button>
+
                         <button
                           onClick={() => handleDeleteClick(space._id)}
                           className="flex items-center w-full px-4 py-2 text-sm hover:bg-red-600 gap-2 text-red-400 hover:text-white"
@@ -171,6 +192,23 @@ export default function SpacesList({ spaces }) {
         </>
       )}
     </div>
+
+    {loadingSpaceId && (
+  <div className="fixed inset-4 bg-black/60 z-50 flex items-center justify-center backdrop-blur-sm h-full w-full">
+    <div className="flex flex-col items-center gap-4">
+      <Lottie
+        animationData={Arrow_Loading}
+        loop
+        autoplay
+        className="w-52 h-100"
+      />
+      <p className="text-white text-sm tracking-wide">
+        Preparing insights…
+      </p>
+    </div>
+  </div>
+)}
+
 
     <ConfirmModal
       isOpen={showConfirm}

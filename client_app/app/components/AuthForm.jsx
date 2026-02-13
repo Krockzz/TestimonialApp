@@ -118,8 +118,8 @@ export default function AuthForm({ type = "register", error }) {
 
       
       <a
-        href= {`${API_URL}/api/v1/auth/google`}
-        // href="http://localhost:8000/api/v1/auth/google"
+        // href= {`${API_URL}/api/v1/auth/google`}
+        href="http://localhost:8000/api/v1/auth/google"
         className="flex items-center justify-center gap-3 w-full py-2.5 px-4 rounded-xl shadow-md bg-white text-gray-700 font-medium transition-all duration-300 transform hover:scale-105 hover:shadow-xl active:scale-95"
       >
         <FcGoogle className="text-xl" />

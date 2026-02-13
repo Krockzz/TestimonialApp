@@ -4,7 +4,7 @@ import passport from "passport";
 
 const router = Router();
 // CORS_ORIGIN=https://testimonia-delta.vercel.app
-const FRONTEND_URL = "http://localhost:5173"
+const FRONTEND_URL = "http://localhost:5173";
 
 // Step 1: Start Google Login
 router.get(

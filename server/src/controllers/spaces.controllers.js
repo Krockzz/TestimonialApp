@@ -346,9 +346,6 @@ const generateSpaceInsights = asyncHandler(async (req, res) => {
   const positiveNeutral = dedupeTexts(positiveNeutralRaw).join(". ");
   const negative = dedupeTexts(negativeRaw).join(". ");
 
-  // -----------------------------
-  // Summarize each once
-  // -----------------------------
   const positiveSummary =
     positiveNeutral.length >= 80
       ? await summarize(positiveNeutral, "strengths")
@@ -361,15 +358,10 @@ const generateSpaceInsights = asyncHandler(async (req, res) => {
 
       : "";
 
-  // -----------------------------
-  // Fallback if empty
-  // -----------------------------
   const strengths = positiveSummary || "Not enough positive feedback to generate insights.";
   const improvements = negativeSummary || "No major issues reported by users.";
 
-  // -----------------------------
-  // Save insights
-  // -----------------------------
+
   space.insights = {
     strengths: String(strengths),
     improvements: String(improvements),

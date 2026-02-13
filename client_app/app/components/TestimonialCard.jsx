@@ -8,7 +8,6 @@ import {
   Download,
   Share2,
   Code2,
-  // LucideNetwork,
   Network,
   Heart
 } from "lucide-react";
@@ -220,11 +219,6 @@ const API_URI = import.meta.env.VITE_API_URL;
   }, [loadingPublicLink]);
 
 
-
-
-
-
-
   const handleShareX = (platform) => {
     if (platform === "X") {
       setSharingPlatform(platform);
@@ -309,6 +303,9 @@ const handleToggleLike = async () => {
   }
 };
 
+const isSpam = testimonial.status === "spam";
+const isDisabled = liking || isSpam;
+
 
 
 
@@ -346,22 +343,42 @@ const handleToggleLike = async () => {
 </div>
 
 
-{/* Top-right Heart Button */}
-<div className="absolute top-4 right-4">
-  <button
-    onClick={handleToggleLike}
-    disabled={liking}
-  className="group transition-transform active:scale-90"
-  >
-    <Heart
-      className={`w-6 h-6 transition-all duration-200 ${
-        isLiked
-          ? "fill-red-500 stroke-red-500"
-          : "fill-none stroke-red-500"
-      }`}
-    />
-  </button>
+<div className="absolute top-4 right-4 flex items-center gap-2">
+  {testimonial.status === "spam" && (
+    <span className="px-5 py-1 text-[12px] font-bold text-red-600 bg-red-100 rounded-2xl shadow">
+      SPAM
+    </span>
+  )}
+
+
+
+
+<button
+  onClick={handleToggleLike}
+  disabled={isDisabled}
+  className={`
+    group transition-transform active:scale-90
+    ${
+      isSpam
+        ? "cursor-not-allowed opacity-60"
+        : isDisabled
+        ? "cursor-wait opacity-60"
+        : "cursor-pointer"
+    }
+  `}
+>
+  <Heart
+    className={`w-6 h-6 transition-all duration-200 ${
+      isLiked
+        ? "fill-red-500 stroke-red-500"
+        : "fill-none stroke-red-500"
+    }`}
+  />
+</button>
+
+
 </div>
+
 
 
 
@@ -491,20 +508,6 @@ const handleToggleLike = async () => {
   Sentiment Analysis
 </button>
 
-
-
-
-
-
-                  <button
-                    className="flex items-center gap-3 px-4 py-2 hover:bg-gray-200 text-sm w-full text-left rounded-md"
-                    onClick={() => {
-                      // setShowEmbedForm(true);
-                      setOpenMenuId_Share(null);
-                    }}
-                  >
-                    <MdSummarize className="w-5 h-5 text-gray-400" /> Text summarization
-                  </button>
 
                  
                 </div>

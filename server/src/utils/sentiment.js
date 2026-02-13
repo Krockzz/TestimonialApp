@@ -11,7 +11,7 @@ export async function analyzeSentiment(text) {
   if (!sentiment) {
     const modelPath = path.resolve(__dirname, "../../sentiment-model");
 
-    console.log("Loading model from:", modelPath);
+    // console.log("Loading model from:", modelPath);
 
     sentiment = await pipeline("text-classification", "Xenova/distilbert-base-uncased-finetuned-sst-2-english", {
       model: modelPath,

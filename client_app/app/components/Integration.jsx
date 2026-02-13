@@ -4,6 +4,7 @@ import { FaXTwitter, FaReddit } from "react-icons/fa6";
 import dayjs from "dayjs";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSubmit } from "@remix-run/react";
+import Featured from "./FeaturedHeart.jsx";
 
 import IntegrationModal from "../components/IntegrationModal.jsx";
 import ConfirmModal from "./ConfirmModal.jsx";
@@ -74,8 +75,6 @@ export default function Integration({
       ))}
     </div>
   );
-
-  /* ----------- DATA NORMALIZATION ----------- */
 
   const getAvatar = (t) => {
     if (t.sourceType === "twitter") return t.avatar;
@@ -211,7 +210,7 @@ export default function Integration({
 
                     <div className="flex gap-2">
                       <Star className="w-4 h-4 text-purple-400 hover:scale-110 transition" />
-                      <Heart className="w-4 h-4 text-red-400 hover:scale-110 transition" />
+                      <Featured testimonial={t} />
                     </div>
                   </div>
 

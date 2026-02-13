@@ -1,7 +1,7 @@
 import { Router } from "express";
 // import { verify } from "jsonwebtoken";
 import { verifyJwt } from "../middlewares/auth.middlewares.js";
-import { createTestimonial, deleteTestimonial, getAllTestimonial, getTestimonialById, likecontroller, updateTestimonial , importTweetAsTestimonial, verifyEmail, toggleFeaturedTestimonial, importRedditAsTestimonial } from "../controllers/Testimonial.controllers.js";
+import { createTestimonial, deleteTestimonial, getAllTestimonial, getTestimonialById, likecontroller, updateTestimonial , importTweetAsTestimonial, verifyEmail, toggleFeaturedTestimonial, importRedditAsTestimonial , importYouTubeVideoAsTestimonial } from "../controllers/Testimonial.controllers.js";
 import { upload } from "../middlewares/multer.middleware.js";
 
 const router = Router()
@@ -34,5 +34,6 @@ router.route("/testimonial/:TestimonialId/like").post(verifyJwt , likecontroller
 router.route("/getTestimonial/:TestiId").get(  getTestimonialById)
 router.route("/verify-email").get(verifyEmail)
 router.route("/toggle-featured/:testimonialId").patch(toggleFeaturedTestimonial)
+router.route("/import-youtube/:spaceId").post(verifyJwt , importYouTubeVideoAsTestimonial)
 
 export default router;

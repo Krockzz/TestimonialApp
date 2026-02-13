@@ -28,6 +28,7 @@ import Integration from "../components/Integration";
 import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { MdOutlineAnalytics } from "react-icons/md";
+import YouTubeIntegration from "../components/Youtube_Integration";
 
 const API_URI = import.meta.env.VITE_API_URL;
 
@@ -55,85 +56,80 @@ export async function loader({ request, params }) {
 
   const docs = testimonialData.data.docs;
 
+  // console.log("this is the metaData" ,docs)
+
+  const YouTube_Data = docs.filter(t => t.sourceType == 'youtube' );
+
+  console.log("This is youtube data" , YouTube_Data);
+
   return json({
   spaceData,
   customerTestimonials: docs.filter(
-    t => t.sourceType !== "twitter" && t.sourceType !== "reddit"
+    t => t.sourceType !== "twitter" && t.sourceType !== "reddit" && t.sourceType !== "youtube"
   ),
   twitterTestimonials: docs.filter(
     t => t.sourceType === "twitter" || t.sourceType === "reddit"
   ),
+
+  YouTube_Data
 });
 
 }
-
 
 export async function action({ request, params }) {
   const cookieHeader = request.headers.get("Cookie");
   const data = await request.formData();
   const spaceId = params.id;
 
-  if (data.get("intent") === "importTweet" || data.get("intent") === "importReddit") {
+  const intent = data.get("intent");
 
-    if(data.get("intent") === "importTweet"){
+  if (intent === "importtwitter") {
     const tweetUrl = data.get("twitterUrl");
-
-    await fetch(
-      `${API_URI}/api/v1/users/Testimonial/import-twitter/${spaceId}`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Cookie: cookieHeader,
-        },
-        body: JSON.stringify({ tweetUrl, spaceId }),
-      }
-    );
-
-    return redirect(`/space/${spaceId}`);
-  }
-
-  else {
-    const redUrl = data.get("redditUrl");
-    console.log("So the reddit URL is" , redUrl);
-
-    await fetch(
-      `${API_URI}/api/v1/users/Testimonial/import-reddit/${spaceId}`, {
-        method : "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Cookie: cookieHeader,
-        },
-        body: JSON.stringify({ redUrl, spaceId }),  
-        }
-      
-    );
-
-    return redirect(`/space/${spaceId}`);
-
-  }
-}
-
-  const testimonialId = data.get("testimonialId");
-
-  await fetch(
-    `${API_URI}/api/v1/users/Testimonial/delete/${testimonialId}`,
-    {
+    await fetch(`${API_URI}/api/v1/users/Testimonial/import-twitter/${spaceId}`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Cookie: cookieHeader,
-      },
+      headers: { "Content-Type": "application/json", Cookie: cookieHeader },
+      body: JSON.stringify({ tweetUrl, spaceId }),
+    });
+    return redirect(`/space/${spaceId}`);
+  }
+
+  if (intent === "importreddit") {
+    const redUrl = data.get("redditUrl");
+    await fetch(`${API_URI}/api/v1/users/Testimonial/import-reddit/${spaceId}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Cookie: cookieHeader },
+      body: JSON.stringify({ redUrl, spaceId }),
+    });
+    return redirect(`/space/${spaceId}`);
+  }
+
+  if (intent === "importyoutube") {
+    const videoUrl = data.get("youtubeUrl");
+    console.log("Youtube URL in action:", videoUrl);
+    await fetch(`${API_URI}/api/v1/users/Testimonial/import-youtube/${spaceId}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Cookie: cookieHeader },
+      body: JSON.stringify({ videoUrl, spaceId }),
+    });
+    return redirect(`/space/${spaceId}`);
+  }
+
+ 
+  const testimonialId = data.get("testimonialId");
+  if (testimonialId) {
+    await fetch(`${API_URI}/api/v1/users/Testimonial/delete/${testimonialId}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Cookie: cookieHeader },
       body: JSON.stringify({ testimonialId, spaceId }),
-    }
-  );
+    });
+  }
 
   return redirect(`/space/${spaceId}`);
 }
 
+
 export default function TestimonialsOnly() {
-  const { spaceData, customerTestimonials, twitterTestimonials } =
-    useLoaderData();
+  const { spaceData, customerTestimonials, twitterTestimonials , YouTube_Data} = useLoaderData();
 
   const space = spaceData.data;
 
@@ -188,8 +184,6 @@ export default function TestimonialsOnly() {
 
       <hr className="border-t border-gray-700 mb-6" />
 
-      {/* MAIN LAYOUT */}
-      {/* 🔥 FIX: items-start so height grows naturally */}
       <div className="flex items-start gap-6 px-6">
         {/* Sidebar */}
         <aside className="w-56 shrink-0">
@@ -215,16 +209,26 @@ export default function TestimonialsOnly() {
           ))}
 
           <Accordion
-            title="Integrations"
-            open={showIntegrations}
-            toggle={setShowIntegrations}
-            items={[
-              ["Social Media", "integration", [Twitter, Instagram]],
-              ["Video", "integration-video", [Youtube]],
-            ]}
-            activePanel={activePanel}
-            setActivePanel={setActivePanel}
-          />
+  title="Integrations"
+  open={showIntegrations}
+  toggle={setShowIntegrations}
+  items={[
+    ["Social Media", "integration-social", [Twitter, Instagram]],
+    ["Video", "integration-video", [Youtube]],
+  ]}
+  activePanel={activePanel}
+  setActivePanel={setActivePanel}
+  onSelect={(key) => {
+    setActivePanel(key);
+
+    if (key === "integration-social") {
+      setShowIntegrationModal("social");
+    } else if (key === "integration-video") {
+      setShowIntegrationModal("video");
+    }
+  }}
+/>
+
 
           <Accordion
             title="Embed"
@@ -279,12 +283,19 @@ export default function TestimonialsOnly() {
               transition={{ duration: 0.3 }}
               className="space-y-4 w-full h-auto"
             >
-              {activePanel === "integration" && (
-                <Integration
-                  twitterTestimonials={twitterTestimonials}
-                  spaceId={space._id}
-                />
-              )}
+           
+{activePanel === "integration-social" && (
+  <Integration
+    twitterTestimonials={twitterTestimonials}
+    spaceId={space._id}
+  />
+)}
+
+
+{activePanel === "integration-video" && (
+  <YouTubeIntegration youtubeTestimonials= {YouTube_Data} />
+)}
+
 
               {activePanel === "public-page" && (
                 <WallOfLovePanel spaceId={space._id} />
@@ -320,7 +331,6 @@ export default function TestimonialsOnly() {
   );
 }
 
-/* ---------------- Accordion ---------------- */
 
 function Accordion({
   title,
