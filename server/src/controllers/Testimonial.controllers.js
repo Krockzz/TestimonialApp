@@ -206,7 +206,7 @@ const createTestimonial = asyncHandler(async (req, res) => {
 testimonial.emailVerification = {
   token: emailToken,
   sentAt: new Date(),
-  expiresAt: new Date(Date.now() +  30 *  1000),
+  expiresAt: new Date(Date.now() +  120 *  1000),
   verified: false
 };
 

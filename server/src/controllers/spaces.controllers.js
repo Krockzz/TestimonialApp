@@ -151,11 +151,6 @@ const createSpace = asyncHandler(async (req, res) => {
   return res.status(200).json(new ApiResponse(200, space, "Space created successfully"));
 });
 
-
-
-
-
-
 const getSpaceById = asyncHandler(async(req, res) => {
     const{SpaceId} = req.params;
     if(!SpaceId){
@@ -375,13 +370,93 @@ const generateSpaceInsights = asyncHandler(async (req, res) => {
     new ApiResponse(200, space.insights, "Insights generated successfully")
   );
 });
+const getSpaceAnalytics = asyncHandler(async (req, res) => {
 
+  const { SpaceId } = req.params;
 
+  if (!mongoose.Types.ObjectId.isValid(SpaceId)) {
+    throw new ApiError(400, "Invalid space Id");
+  }
 
+  const space = await Spaces.findById(SpaceId);
 
+  if (!space) {
+    throw new ApiError(404, "No such space exists");
+  }
 
+  const spaceObjectId = new mongoose.Types.ObjectId(SpaceId);
 
+  const analytics = await Testimonial.aggregate([
+    {
+      $match: {
+        space: spaceObjectId,
+        // status: "active"
+      }
+    },
+    {
+      $facet: {
 
+        submissionRate: [
+          {
+            $group: {
+              _id: {
+                year: { $year: "$createdAt" },
+                month: { $month: "$createdAt" }
+              },
+              count: { $sum: 1 }
+            }
+          },
+          {
+            $sort: {
+              "_id.year": 1,
+              "_id.month": 1
+            }
+          }
+        ],
+
+        sentiment: [
+          {
+            $match: {
+              "sentiment.label": { $exists: true }
+            }
+          },
+          {
+            $group: {
+              _id: "$sentiment.label",
+              count: { $sum: 1 }
+            }
+          }
+        ],
+
+        sourceDistribution: [
+          {
+            $group: {
+              _id: "$sourceType",
+              count: { $sum: 1 }
+            }
+          }
+        ],
+
+        totalTestimonials: [
+          {
+            $count: "count"
+          }
+        ]
+
+      }
+    }
+  ]);
+
+  const result = analytics[0];
+
+  return res.status(200).json({
+    totalTestimonials: result.totalTestimonials[0]?.count || 0,
+    submissionRate: result.submissionRate || [],
+    sentiment: result.sentiment || [],
+    sourceDistribution: result.sourceDistribution || []
+  });
+
+});
 
 
 
@@ -392,5 +467,6 @@ export{
     updateAvatar,
     getAllSpaces,
     getSpaceById,
-    generateSpaceInsights
+    generateSpaceInsights,
+    getSpaceAnalytics
 }

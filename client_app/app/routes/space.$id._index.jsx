@@ -6,6 +6,8 @@ import { CiInboxIn  } from "react-icons/ci";
 import WallOfLovePanel from "../components/WallOfLOvePanel";
 import { IoArrowRedoCircleSharp } from "react-icons/io5";
 import RequestTestimonial from "../components/RequestTestimonial";
+import AnalyticsDashBoard from "../components/AnalyticsDashBoard";
+import WallOfLoveModal from "../components/WallCarouselModal";
 
 
 import {
@@ -22,6 +24,10 @@ import {
 } from "lucide-react";
 import { RiSpamFill } from "react-icons/ri";
 import { FaEnvelopeOpenText } from "react-icons/fa";
+import { PiSmileySad } from "react-icons/pi";
+import { FaSmile } from "react-icons/fa";
+
+
 
 import TestimonialCard from "../components/TestimonialCard";
 import Integration from "../components/Integration";
@@ -29,6 +35,7 @@ import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { MdOutlineAnalytics } from "react-icons/md";
 import YouTubeIntegration from "../components/Youtube_Integration";
+import { ImSad2 } from "react-icons/im";
 
 const API_URI = import.meta.env.VITE_API_URL;
 
@@ -47,29 +54,45 @@ export async function loader({ request, params }) {
     { headers: { Cookie: cookieHeader } }
   );
 
-  if (!res1.ok || !res2.ok) {
+  const res3 = await fetch(
+    `${API_URI}/api/v1/users/spaces/get-analytics/${spaceId}`,
+    {headers: {Cookie: cookieHeader}}
+  );
+
+  if (!res1.ok || !res2.ok || !res3.ok) {
     throw new Response("Failed to load data", { status: 500 });
   }
 
   const spaceData = await res1.json();
   const testimonialData = await res2.json();
+  const analyticsData = await res3.json();
 
   const docs = testimonialData.data.docs;
+  console.log("This is the testimonial anaytics data" , analyticsData);
 
   // console.log("this is the metaData" ,docs)
 
   const YouTube_Data = docs.filter(t => t.sourceType == 'youtube' );
 
-  console.log("This is youtube data" , YouTube_Data);
+  // console.log("This is youtube data" , YouTube_Data);
+
+  const featuredTestimonials = docs.filter(
+  t => t.featured?.enabled === true
+);
+
+
+
 
   return json({
   spaceData,
+  analyticsData,
   customerTestimonials: docs.filter(
     t => t.sourceType !== "twitter" && t.sourceType !== "reddit" && t.sourceType !== "youtube"
   ),
   twitterTestimonials: docs.filter(
     t => t.sourceType === "twitter" || t.sourceType === "reddit"
   ),
+  featuredTestimonials,
 
   YouTube_Data
 });
@@ -105,7 +128,7 @@ export async function action({ request, params }) {
 
   if (intent === "importyoutube") {
     const videoUrl = data.get("youtubeUrl");
-    console.log("Youtube URL in action:", videoUrl);
+    // console.log("Youtube URL in action:", videoUrl);
     await fetch(`${API_URI}/api/v1/users/Testimonial/import-youtube/${spaceId}`, {
       method: "POST",
       headers: { "Content-Type": "application/json", Cookie: cookieHeader },
@@ -129,9 +152,10 @@ export async function action({ request, params }) {
 
 
 export default function TestimonialsOnly() {
-  const { spaceData, customerTestimonials, twitterTestimonials , YouTube_Data} = useLoaderData();
+  const { spaceData, analyticsData, customerTestimonials, twitterTestimonials , featuredTestimonials, YouTube_Data} = useLoaderData();
 
   const space = spaceData.data;
+  console.log("This is the customer data" , customerTestimonials);
 
   const [filter, setFilter] = useState("All");
   const [activePanel, setActivePanel] = useState("testimonials");
@@ -142,6 +166,8 @@ export default function TestimonialsOnly() {
   const [showAnalytics, setShowAnalytics] = useState(false);
 
   const [showWidgetModal, setShowWidgetModal] = useState(false);
+  const [analyticsloading , setanalyticsLoading] = useState(false);
+  const[showwallModal , setshowwallModal] = useState(false);
 
   const filteredTestimonials = customerTestimonials.filter(t => {
     if (filter === "Spam") return t.status === "spam";
@@ -150,6 +176,8 @@ export default function TestimonialsOnly() {
     if (filter === "All") return true;
     if (filter === "Text") return !t.videoURL;
     if (filter === "Videos") return !!t.videoURL;
+    if(filter === "Positive") return t.sentiment?.label === "POSITIVE";
+    if(filter === "Negative") return t.sentiment?.label === "NEGATIVE";
 
     return true;
   });
@@ -159,6 +187,8 @@ export default function TestimonialsOnly() {
     { label: "Videos", icon: FaEnvelopeOpenText },
     { label: "Text", icon: Pencil },
     { label: "Spam", icon: RiSpamFill },
+    {label: "Positive", icon: FaSmile},
+    {label: "Negative", icon: ImSad2}
   ];
 
   return (
@@ -243,6 +273,7 @@ export default function TestimonialsOnly() {
             setActivePanel={setActivePanel}
             onSelect={key => {
               if (key === "embed-widget") setShowWidgetModal(true);
+              if(key === "wall-of-love") setshowwallModal(true);
             }}
           />
 
@@ -269,6 +300,23 @@ export default function TestimonialsOnly() {
             ]}
             activePanel={activePanel}
             setActivePanel={setActivePanel}
+
+            onSelect={(key) => {
+
+  if (key === "analytics-overview") {
+
+    setanalyticsLoading(true);
+
+    setTimeout(() => {
+      setanalyticsLoading(false);
+      setActivePanel("analytics-overview");
+    }, 8000); 
+
+  } else {
+    setActivePanel(key);
+  }
+
+}}
           />
         </aside>
 
@@ -315,6 +363,47 @@ export default function TestimonialsOnly() {
                     type={t.videoURL ? "video" : "text"}
                   />
                 ))}
+
+                {activePanel === "wall-of-love" && (
+                  <WallOfLoveModal
+                    featuredTestimonials={featuredTestimonials }
+                    spaceId={space._id}
+                    onClose={() => setActivePanel("testimonials")}
+                    spaceDetails={space}
+                  />
+                )}
+
+                 {activePanel === "analytics-overview" && (
+
+  analyticsloading ? (
+
+   <div className="flex flex-col items-center justify-center h-[320px] gap-6">
+
+  <div className="relative flex items-center justify-center">
+    <div className="h-16 w-16 rounded-full border-4 border-gray-700"></div>
+    <div className="absolute h-16 w-16 rounded-full border-t-4 border-blue-500 animate-spin"></div>
+  </div>
+
+  <div className="text-center space-y-1">
+    <p className="text-lg font-semibold text-gray-200">
+      Loading analytics
+    </p>
+    <p className="text-sm text-gray-400 animate-pulse">
+      Preparing your dashboard...
+    </p>
+  </div>
+
+</div>
+
+  ) : (
+
+    <AnalyticsDashBoard analytics={analyticsData} />
+
+  )
+
+)}
+
+
             </motion.div>
           </AnimatePresence>
         </div>

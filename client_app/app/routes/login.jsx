@@ -18,7 +18,7 @@ const API_URL = import.meta.env.VITE_API_URL;
       method: "POST",
       headers: { "Content-Type": "application/json" },
       credentials: "include",
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify({ email, password }), // THIS ONE IS PAYLOAD
     });
 
     if (!res.ok) {

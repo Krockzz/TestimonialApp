@@ -3,7 +3,7 @@ import { FaStar } from "react-icons/fa";
 import { motion, AnimatePresence } from "framer-motion";
 import Lottie from "lottie-react";
 import Uploading from "../../../utilities/Uploading.json";
-import { useSpeechToText } from "../../../utilities/UserSpeechText";
+// import { useSpeechToText } from "../../../utilities/UserSpeechText";
 
 export default function TestimonialForm({ space, rating, setRating, onClose, testimonialType }) {
   const [hover, setHover] = useState(null);
@@ -28,9 +28,6 @@ export default function TestimonialForm({ space, rating, setRating, onClose, tes
 
   const spaceId = space._id;
 
-  const { start, stop, listening } = useSpeechToText((speech) => {
-  setText((prev) => prev + " " + speech);
-});
 
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -264,7 +261,6 @@ useEffect(() => {
                   </div>
                 </div>
 
-                {/* Textarea or Video */}
                 {testimonialType === "text" ? (
   <div className="relative">
     <textarea
@@ -276,16 +272,7 @@ useEffect(() => {
       rows={4}
       placeholder="Write your testimonial here..."
     />
-    <button
-      type="button"
-      onClick={listening ? stop : start}
-      className={`absolute right-3 bottom-3 p-2 rounded-full ${
-        listening ? "bg-red-600 text-white" : "bg-blue-600 text-white"
-      } hover:scale-110 transition`}
-      title={listening ? "Stop Recording" : "Speak"}
-    >
-      🎤
-    </button>
+   
   </div>
 ) : (
                   <div>

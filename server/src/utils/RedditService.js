@@ -17,8 +17,16 @@ export const fetchRedditPostByUrl = async (redditUrl) => {
   const response = await fetch(url, {
     method: "GET",
     headers: {
-      // Important: Reddit blocks requests without user-agent sometimes
-      "User-Agent": "TestimonialApp/1.0 by krunal",
+ 
+      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+      "Accept": "application/json",
+      "Accept-Language": "en-US,en;q=0.9",
+      "Referer": "https://www.reddit.com/",
+      "DNT": "1",
+      "Connection": "keep-alive",
+      "Sec-Fetch-Dest": "empty",
+      "Sec-Fetch-Mode": "cors",
+      "Sec-Fetch-Site": "same-origin",
     },
   });
 
@@ -27,7 +35,7 @@ export const fetchRedditPostByUrl = async (redditUrl) => {
   }
 
   if (!response.ok) {
-    throw new Error(`Failed to fetch reddit post (${response.status})`);
+    throw new Error(`Failed to fetch reddit post (${response.status}) and the error message is ${response.statusText} for the url ${url}`);
   }
 
   const data = await response.json();

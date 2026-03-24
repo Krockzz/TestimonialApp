@@ -7,8 +7,6 @@ import jwt from "jsonwebtoken"
 import { Spaces } from "../models/Spaces.models.js"
 // import { sendEmail } from "../utils/resend.js"
 
-
-
 const GenerateAccessandRefreshToken = async(userId) => {
 
     try{
@@ -258,8 +256,6 @@ const logoutUser = asyncHandler(async(req, res) => {
 
    .json(new ApiResponse(200, {}, "User logged Out"))
 })
-
-
 
 const RefreshAccessToken = asyncHandler(async(req, res) => {
     try{

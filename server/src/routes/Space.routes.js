@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { verifyJwt } from "../middlewares/auth.middlewares.js";
-import { createSpace, deleteSpace, getAllSpaces, getSpaceById, updateAvatar, updateSpace, generateSpaceInsights } from "../controllers/spaces.controllers.js";
+import { createSpace, deleteSpace, getAllSpaces, getSpaceById, updateAvatar, updateSpace, generateSpaceInsights , getSpaceAnalytics } from "../controllers/spaces.controllers.js";
 import { upload } from "../middlewares/multer.middleware.js";
 
 const router = Router();
@@ -23,6 +23,7 @@ router.route("/getSpace/:SpaceId").get( getSpaceById )
 router.route("/update-avatar").patch(verifyJwt , upload.single("avatar") , updateAvatar)
 router.route("/getSpaces").get(verifyJwt , getAllSpaces)
 router.route("/get-Insights/:SpaceId").get(verifyJwt , generateSpaceInsights)
+router.route("/get-analytics/:SpaceId").get(verifyJwt , getSpaceAnalytics)
 
 
 export default router

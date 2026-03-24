@@ -8,8 +8,6 @@ export default function IntegrationModal({ isOpen, onClose, spaceId, platform })
   const [addToWall, setAddToWall] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  /* ---------------- PLATFORM CONFIG ---------------- */
-
   const PLATFORM_CONFIG = {
     twitter: {
       name: "Tweet",
@@ -34,13 +32,11 @@ export default function IntegrationModal({ isOpen, onClose, spaceId, platform })
     badge: "bg-gray-100 text-gray-700",
   };
 
-  /* ---------------- HANDLERS ---------------- */
 
   const handleSubmit = (e) => {
     e.preventDefault();
     setIsSubmitting(true);
 
-    // simulate network delay UX (you already had this)
     setTimeout(() => {
       setIsSubmitting(false);
       setUrl("");
@@ -51,7 +47,6 @@ export default function IntegrationModal({ isOpen, onClose, spaceId, platform })
     e.target.submit();
   };
 
-  /* ---------------- UI ---------------- */
 
   return (
     <AnimatePresence>
