@@ -267,7 +267,7 @@ export default function TestimonialsOnly() {
             toggle={setShowEmbed}
             items={[
               ["Collecting widget", "embed-widget", [CiInboxIn]],
-              ["Wall of Love", "wall-of-love", [GiSelfLove]],
+              ["Wall of Trust", "wall-of-love", [GiSelfLove]],
             ]}
             activePanel={activePanel}
             setActivePanel={setActivePanel}
@@ -283,7 +283,7 @@ export default function TestimonialsOnly() {
             open={showPages}
             toggle={setShowPages}
             items={[
-              ["Public Page", "public-page", [GiSelfLove]],
+              ["Wall of Trust", "public-page", [GiSelfLove]],
               ["Request Testimonial", "req-testi", [IoArrowRedoCircleSharp]],
             ]}
             activePanel={activePanel}

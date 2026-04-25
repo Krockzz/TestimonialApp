@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Download, Heart, Star, ChevronUp } from "lucide-react";
-import { FaXTwitter, FaReddit } from "react-icons/fa6";
+import { FaStar,  FaReddit } from "react-icons/fa";
+import { FaXTwitter } from "react-icons/fa6";
 import dayjs from "dayjs";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSubmit } from "@remix-run/react";
@@ -198,8 +199,8 @@ const handleDownload = async (t) => {
   };
 
   const getSourceIcon = (t) => {
-    if (t.sourceType === "twitter") return <FaXTwitter size={14} />;
-    if (t.sourceType === "reddit") return <FaReddit size={14} />;
+    if (t.sourceType === "twitter") return <FaXTwitter size={18} />;
+    if (t.sourceType === "reddit") return <FaReddit size={18}  className="text-red-500" />;
     return null;
   };
 
@@ -298,9 +299,11 @@ const handleDownload = async (t) => {
                     </div>
 
                     <div className="flex gap-2">
-                      <Star className="w-4 h-4 text-purple-400 hover:scale-110 transition" />
-                      <Featured testimonial={t} />
-                    </div>
+                      {getSourceIcon(t) }
+                    
+                      <Featured testimonial={t}  />
+                      </div>
+                    
                   </div>
 
                   {/* Content */}

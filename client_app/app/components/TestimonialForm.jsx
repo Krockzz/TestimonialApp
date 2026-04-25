@@ -69,7 +69,6 @@ const startRecording = async () => {
     mediaRecorder.start();
     setRecording(true);
 
-    // Start timer
     setRecordingTime(0);
     timerRef.current = setInterval(() => {
       setRecordingTime((prev) => prev + 1);
@@ -132,7 +131,7 @@ const startRecording = async () => {
     });
 
     const elapsed = Date.now() - startTime;
-    const remaining = Math.max(0, 5000 - elapsed); // ensure at least 5s
+    const remaining = Math.max(0, 5000 - elapsed); 
     await new Promise((resolve) => setTimeout(resolve, remaining));
 
     if (response.ok) {
@@ -198,18 +197,6 @@ useEffect(() => {
               <button
                 onClick={onClose}
                 className="mt-6 px-5 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-              >
-                Close
-              </button>
-            </div>
-          )  : submitted ? (
-            <div className="text-center py-10 space-y-3">
-              <div className="text-5xl">🎉</div>
-              <h3 className="text-xl font-semibold text-gray-800">Thank you for your testimonial!</h3>
-              <p className="text-gray-600">We appreciate your feedback. 🙌</p>
-              <button
-                onClick={onClose}
-                className="mt-6 px-6 py-2 bg-blue-600 text-white rounded-xl shadow hover:bg-blue-700 transition"
               >
                 Close
               </button>

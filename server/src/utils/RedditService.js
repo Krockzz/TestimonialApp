@@ -5,7 +5,6 @@ function toRedditJsonUrl(redditUrl) {
     throw new Error("Invalid Reddit URL");
   }
 
-  // Remove query params
   const cleanUrl = redditUrl.split("?")[0].replace(/\/$/, "");
 
   return `${cleanUrl}.json`;

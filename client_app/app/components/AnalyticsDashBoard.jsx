@@ -40,6 +40,12 @@ export default function AnalyticsDashboard({ analytics }) {
 
   if (!analytics) return null;
 
+  const socialPlatforms = ["twitter", "reddit", "youtube"];
+
+  const social_count = analytics.sourceDistribution
+  .filter(item => socialPlatforms.includes(item._id))
+  .reduce((sum, item) => sum + item.count, 0);
+
  const submissionData = analytics.submissionRate.map(item => ({
   name: `${MONTHS[item._id.month]} ${item._id.year}`,
   submissions: item.count
@@ -47,16 +53,22 @@ export default function AnalyticsDashboard({ analytics }) {
 
   const sentimentData = analytics.sentiment.map(item => ({
     name: item._id,
-    value: item.count
+    value: (item._id === "POSITIVE" ? item.count + social_count : item.count)
   }));
 
-  const sourceData = analytics.sourceDistribution.map(item => ({
-    name: item._id,
-    value: item.count
-  }));
+
+
+
+
+const sourceData = analytics.sourceDistribution.map(item => ({
+  name: item._id,
+  value: item.count
+}));
+
+
 
   const positive =
-    analytics.sentiment.find(s => s._id === "POSITIVE")?.count || 0;
+    analytics.sentiment.find(s => s._id === "POSITIVE")?.count + social_count || 0;
 
   const negative =
     analytics.sentiment.find(s => s._id === "NEGATIVE")?.count || 0;

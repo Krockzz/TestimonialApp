@@ -4,6 +4,10 @@ export default function Features() {
   return (
     <section className="py-16 px-6 bg-gray-900">
       <h2 className="text-2xl font-semibold text-center mb-12 text-white">Why Choose Us?</h2>
+
+      <div className="flex flex-row space-x-1">
+
+      </div>
       <div className="grid gap-10 md:grid-cols-3 max-w-6xl mx-auto">
         <FeatureCard
           title="Easy to Use"

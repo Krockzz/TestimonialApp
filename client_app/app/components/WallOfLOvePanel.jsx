@@ -25,7 +25,6 @@ export default function WallOfLovePanel({ spaceId }) {
         <p className="text-gray-400 mt-1">View and share your Public Page</p>
       </div>
 
-      {/* CARD */}
       <div className="bg-gray-800/80 border border-gray-700 rounded-xl p-5 flex items-center justify-between gap-4">
         <div className="flex flex-col gap-2 overflow-hidden">
           <p className="text-sm text-gray-300 font-medium">
@@ -35,9 +34,7 @@ export default function WallOfLovePanel({ spaceId }) {
           <p className="text-blue-400 text-sm truncate">{url}</p>
         </div>
 
-        {/* ACTIONS */}
         <div className="flex items-center gap-3 shrink-0">
-          {/* Edit (future use) */}
           <button
             className="p-2 rounded-lg border border-gray-600 hover:bg-gray-700 transition"
             title="Edit"
@@ -45,7 +42,6 @@ export default function WallOfLovePanel({ spaceId }) {
             <Pencil className="w-4 h-4" />
           </button>
 
-          {/* Copy */}
           <button
             onClick={handleCopy}
             className="p-2 rounded-lg border border-gray-600 hover:bg-gray-700 transition"
@@ -54,7 +50,6 @@ export default function WallOfLovePanel({ spaceId }) {
             <Copy className="w-4 h-4" />
           </button>
 
-          {/* Open */}
           <a
             href={url}
             target="_blank"

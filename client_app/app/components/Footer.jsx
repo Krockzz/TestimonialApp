@@ -54,7 +54,6 @@ export default function Footer() {
       </div>
  
     <div className="flex , space-x-5 , p-2">
-
 </div>
 
 

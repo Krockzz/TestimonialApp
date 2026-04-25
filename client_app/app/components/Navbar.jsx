@@ -13,7 +13,6 @@ export default function Navbar({ user }) {
       {[
         { path: "/", label: "Home" },
         { path: "/features", label: "Features" },
-        { path: "/about", label: "About" },
         { path: "/pricing", label: "Pricing" },
       ].map(({ path, label }) => (
         <Link

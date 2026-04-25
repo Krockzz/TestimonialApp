@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
-import { FaStar } from "react-icons/fa";
-
+import { FaStar,  FaReddit } from "react-icons/fa";
+import { FaXTwitter } from "react-icons/fa6";
 
 export default function WallCarousel({
   testimonials = [],
@@ -13,12 +13,10 @@ export default function WallCarousel({
   const [translateX, setTranslateX] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
+
   const isDark = theme === "dark";
   const containerRef = useRef(null);
   const isHovered = useRef(false);
-
-  
-
 
   const visibleCountMap = {
     small: 3,
@@ -28,11 +26,11 @@ export default function WallCarousel({
 
   const visibleCount = visibleCountMap[cardSize];
 
-const widthMap = {
-  small: "calc((100% - 2rem * 2) / 3)", 
-  medium: "calc((100% - 2rem) / 2)",     
-  large: "100%"                         
-};
+  const widthMap = {
+    small: "calc((100% - 2rem * 2) / 3)",
+    medium: "calc((100% - 2rem) / 2)",
+    large: "100%"
+  };
 
   const heightMap = {
     small: "200px",
@@ -42,9 +40,19 @@ const widthMap = {
 
   const loopedTestimonials = [...testimonials, ...testimonials];
 
-const next = () => {
-  setIndex((prev) => prev + 1);
-};
+  const getPlatformIcon = (sourceType) => {
+
+    const theme = isDark ? "dark" : "light";
+    if (sourceType === "twitter") {
+      return <FaXTwitter className={theme === "dark" ? "text-white" : "text-black"} size={18} />;
+    }
+    if (sourceType === "reddit") {
+      return <FaReddit className={theme === "dark" ? "text-white" : "text-orange-500"} size={18} />;
+    }
+    return null;
+  };
+
+  const next = () => setIndex((prev) => prev + 1);
 
   const prev = () => {
     setIndex((prev) =>
@@ -53,16 +61,15 @@ const next = () => {
   };
 
   useEffect(() => {
-  if (index >= testimonials.length) {
-    setTimeout(() => {
-      setIsTransitioning(false);
-      setIndex(0);
-    }, 500);
-  } else {
-    setIsTransitioning(true);
-  }
-}, [index, testimonials.length]);
-
+    if (index >= testimonials.length) {
+      setTimeout(() => {
+        setIsTransitioning(false);
+        setIndex(0);
+      }, 500);
+    } else {
+      setIsTransitioning(true);
+    }
+  }, [index, testimonials.length]);
 
   useEffect(() => {
     if (mode !== "auto") return;
@@ -74,44 +81,44 @@ const next = () => {
     }, 2500);
 
     return () => clearInterval(interval);
-  }, [mode, testimonials.length]);
+  }, [mode]);
 
   useEffect(() => {
-  const container = containerRef.current;
-  if (!container) return;
+    const container = containerRef.current;
+    if (!container) return;
 
-  const firstChild = container.children[0];
-  if (!firstChild) return;
+    const firstChild = container.children[0];
+    if (!firstChild) return;
 
-  const gap = 32; 
+    const gap = 32;
+    const cardWidth = firstChild.offsetWidth;
+    const totalMove = index * (cardWidth + gap);
 
-  const cardWidth = firstChild.offsetWidth;
-
-  const totalMove = index * (cardWidth + gap);
-
-  setTranslateX(totalMove);
-}, [index, cardSize]);
+    setTranslateX(totalMove);
+  }, [index, cardSize]);
 
   return (
     <div
-       className="flex flex-col items-center gap-8 w-full"
-       onMouseEnter={() => (isHovered.current = true)}
-        onMouseLeave={() => (isHovered.current = false && setIsPaused(false))}
-        onMouseDown={() => setIsPaused(true)}
-        onMouseUp={() => setIsPaused(false)}
-        onTouchStart={() => setIsPaused(true)}
-        onTouchEnd={() => setIsPaused(false)}
+      className="flex flex-col items-center gap-8 w-full"
+      onMouseEnter={() => (isHovered.current = true)}
+      onMouseLeave={() => {
+        isHovered.current = false;
+        setIsPaused(false);
+      }}
+      onMouseDown={() => setIsPaused(true)}
+      onMouseUp={() => setIsPaused(false)}
+      onTouchStart={() => setIsPaused(true)}
+      onTouchEnd={() => setIsPaused(false)}
     >
-    
       <div className="overflow-hidden w-full max-w-6xl mx-auto">
         <div
           ref={containerRef}
-          className="flex gap-8 transition-transform duration-500 ease-in-out"
+          className="flex gap-8"
           style={{
             transform: `translateX(-${translateX}px)`,
-             transition: isTransitioning
-      ? "transform 0.5s ease-in-out"
-      : "none"
+            transition: isTransitioning
+              ? "transform 0.5s ease-in-out"
+              : "none"
           }}
         >
           {loopedTestimonials.map((t) => {
@@ -121,9 +128,7 @@ const next = () => {
               <div
                 key={t._id}
                 className="flex-shrink-0"
-                style={{
-                  width: widthMap[cardSize]
-                }}
+                style={{ width: widthMap[cardSize] }}
               >
                 <div
                   className="relative rounded-2xl overflow-hidden"
@@ -137,9 +142,17 @@ const next = () => {
                     boxShadow: "0 10px 30px rgba(0,0,0,0.15)"
                   }}
                 >
+                  {t.sourceType && (
+  <div
+    className={`absolute top-3 right-3 z-40 p-1.5 rounded-full shadow transition hover:scale-110
+      ${theme === "dark" ? "bg-black/70 text-white"  : "bg-white/90"}`}
+    title={t.sourceType}
+  >
+    {getPlatformIcon(t.sourceType, theme)}
+  </div>
+)}
                   {isVideo ? (
                     <>
-                      {/* Background */}
                       <video
                         src={t.videoURL}
                         className="absolute inset-0 w-full h-full object-cover scale-110 opacity-30"
@@ -147,17 +160,14 @@ const next = () => {
                         playsInline
                       />
 
-                      {/* Gradient */}
                       <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent z-10" />
 
-                      {/* Main video */}
                       <video
                         src={t.videoURL}
                         className="relative w-full h-full object-contain z-20"
                         controls
                       />
 
-                      {/* Content */}
                       <div className="absolute inset-0 p-4 flex flex-col justify-between z-30 pointer-events-none">
                         <div className="flex items-center gap-3">
                           <img
@@ -165,7 +175,7 @@ const next = () => {
                             className="w-9 h-9 rounded-full border-2 border-white shadow"
                           />
                           <span className="text-sm font-semibold text-white">
-                            {t.name}
+                            {t.name || t.redditData?.author}
                           </span>
                         </div>
 
@@ -192,7 +202,7 @@ const next = () => {
                           className="w-11 h-11 rounded-full object-cover shadow"
                         />
                         <p className="font-semibold text-base">
-                          {t.name}
+                          {t.name || t.redditData?.author || t.twitterData?.twitterName}
                         </p>
                       </div>
 

@@ -63,7 +63,7 @@ export default function EmbedWall() {
   return (
    <div
   style={{
-    minHeight: "200px",
+    minHeight: "350px",
     background: bg === "transparent" ? "transparent" : bg,
     display: "flex",
     alignItems: "center",

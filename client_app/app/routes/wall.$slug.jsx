@@ -107,7 +107,7 @@ export default function Wall() {
 
           <div className="absolute inset-0 flex flex-col items-center justify-center px-6 text-center">
             <h2 className="mb-4 text-3xl font-bold text-white">
-              {`Wall of love of ${spaceDetails?.name || "Unknown Space"}`}
+              {`Wall of Trust of ${spaceDetails?.name || "Unknown Space"}`}
             </h2>
             <p className="mb-6 max-w-xl text-sm text-gray-200">
               See what people are saying about us. Real feedback from real users.

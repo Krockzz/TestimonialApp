@@ -25,7 +25,7 @@ export async function loader({ request }) {
   }
 
   const data = await res.json();
-  console.log(data)
+  console.log("this is the space data:", data)
   
   return json({ data });
 }
@@ -33,7 +33,6 @@ export async function loader({ request }) {
 export default function Spaces() {
   const {data} = useLoaderData();
   const space = data.data.docs
-
   return (
     <div className="p-6 md:p-10 bg-gradient-to-br from-black via-gray-900 to-black min-h-screen space-y-14">
       {/* Header */}

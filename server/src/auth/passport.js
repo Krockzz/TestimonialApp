@@ -11,12 +11,9 @@ import os from "os"
 const downloadAndUploadGoogleAvatar = async (url) => {
   try {
     if (!url) return null;
-
-    // Generate temporary file path
     const fileName = `google-avatar-${Date.now()}.jpg`;
-    const filePath = path.join(os.tmpdir() , fileName); // or any temp folder you prefer
+    const filePath = path.join(os.tmpdir() , fileName); 
 
-    // Download the image and save to disk
     const response = await fetch(url);
     if (!response.ok) throw new Error(`Failed to fetch image: ${response.statusText}`);
 
@@ -27,7 +24,6 @@ const downloadAndUploadGoogleAvatar = async (url) => {
       fileStream.on("finish", resolve);
     });
 
-    // Upload to Cloudinary using your function (it deletes the file automatically)
     const uploadResult = await uploadOnCloudinary(filePath);
     if (!uploadResult?.secure_url) throw new Error("Failed to upload avatar to Cloudinary");
 
@@ -38,7 +34,6 @@ const downloadAndUploadGoogleAvatar = async (url) => {
   }
 };
 
-// export { downloadAndUploadGoogleAvatar };
 
 
 

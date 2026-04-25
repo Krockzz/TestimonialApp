@@ -49,7 +49,6 @@ export default function SpaceForm({
               action={action}
               className="space-y-6"
             >
-              {/* Space Name */}
               <div>
                 <label className="block mb-1 text-sm text-gray-300 font-medium">
                   Space Name
@@ -64,7 +63,6 @@ export default function SpaceForm({
                 />
               </div>
 
-              {/* Header Title */}
               <div>
                 <label className="block mb-1 text-sm text-gray-300 font-medium">
                   Header Title
@@ -79,7 +77,6 @@ export default function SpaceForm({
                 />
               </div>
 
-              {/* Description */}
               <div>
                 <label className="block mb-1 text-sm text-gray-300 font-medium">
                   Description
@@ -94,7 +91,6 @@ export default function SpaceForm({
                 />
               </div>
 
-              {/* Custom Message */}
               <div>
                 <label className="block mb-1 text-sm text-gray-300 font-medium">
                   Custom Message
@@ -108,7 +104,6 @@ export default function SpaceForm({
                 />
               </div>
 
-              {/* Avatar Upload */}
               <div>
                 <label className="block mb-1 text-sm text-gray-300 font-medium">
                   Avatar Image
@@ -129,7 +124,6 @@ export default function SpaceForm({
                 )}
               </div>
 
-              {/* Submit Button */}
               <button
   type="submit"
   disabled={isSubmitting}

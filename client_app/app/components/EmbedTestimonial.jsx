@@ -57,7 +57,7 @@ export default function EmbedTestimonialModal({ testimonial, avatar, onClose }) 
 const iframeCode = useMemo(() => {
   if (isVideo) {
     
-    return `<iframe src="${window.location.origin}/${testimonial._id}/embedVideo" width="${width}" height="${height}" style="border:none;" loading="lazy"></iframe>`;
+    return `<iframe src="${window.location.origin}/${testimonial._id}/embedVideo" width="${width}" height="${height}" loading="lazy"></iframe>`;
   } else {
    
     const queryParams = new URLSearchParams({
@@ -75,7 +75,7 @@ const iframeCode = useMemo(() => {
     const id = testimonial._id;
     const publicLink = `${window.location.origin}/${id}/embed`;
 
-    return `<iframe src="${publicLink}?${queryParams}" width="600" height="350" style="border:none;" loading="lazy"></iframe>`;
+    return `<iframe src="${publicLink}?${queryParams}" width="600" height="350"  loading="lazy"></iframe>`;
   }
 }, [
   isVideo,
@@ -106,7 +106,7 @@ const iframeCode = useMemo(() => {
   return (
     <>
 
-     { !isVideo ?  ( <div className="fixed inset-0 z-[9999] bg-black/40  flex items-center justify-center px-4 pointer-events-none">
+     { !isVideo ?  ( <div className="fixed inset-0 z-[9999] bg-black/40  flex items-center justify-center px-4 pointer-events-none backdrop-blur-md">
       <div className="bg-white text-black rounded-2xl p-8 w-full max-w-4xl h-[90vh] overflow-y-auto relative shadow-2xl pointer-events-auto">
         <button
           onClick={onClose}

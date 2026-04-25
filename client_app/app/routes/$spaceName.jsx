@@ -11,7 +11,6 @@ const API_URI = import.meta.env.VITE_API_URL;
 
 export const handle = { skipLayout: true };
 
-// Loader to fetch space data
 export async function loader({ request, params }) {
   const spaceId = params.spaceName;
   const cookieHeader = request.headers.get("Cookie");
@@ -32,7 +31,7 @@ export async function loader({ request, params }) {
   }
 }
 
-// Action to submit testimonial
+
 export async function action({ request }) {
   const formData = await request.formData();
   const spaceId = formData.get("spaceId");
