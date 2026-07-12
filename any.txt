@@ -1,3 +1,8 @@
 Hii i am loving it
 
-This is my 4Th fix
+<<<<<<< HEAD
+This is my first fix
+=======
+This is second fix
+This is my third fix
+>>>>>>> another
