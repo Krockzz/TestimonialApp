@@ -19,7 +19,7 @@ export async function action({ request }) {
   }
 
   try {
-    // First, register the user
+  
     const registerRes = await fetch(`${API_URL}/api/v1/users/register`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },

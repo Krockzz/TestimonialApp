@@ -271,7 +271,7 @@ useEffect(() => {
                       >
                         <div
                           onClick={() => fileInputRef.current?.click()}
-                          className="flex-1 border-2 border-dashed border-gray-300 rounded-xl p-6 text-center cursor-pointer hover:border-blue-400 hover:bg-blue-50 shadow-md transition"
+                          className="flex-1 border-2 border-dashed border-blue-300 rounded-xl p-6 text-center cursor-pointer hover:border-blue-400 hover:bg-blue-50 shadow-md transition"
                         >
                           <p>Click to upload or drag & drop</p>
                           <p className="text-xs text-gray-500">{uploadedVideoFile?.name || "No file selected"}</p>
