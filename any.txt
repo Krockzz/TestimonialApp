@@ -1,8 +1,8 @@
 Hii i am loving it
 
-<<<<<<< HEAD
-This is my first fix
-=======
+
+This is my  fix
+
 This is second fix
 This is my third fix
->>>>>>> another
+
