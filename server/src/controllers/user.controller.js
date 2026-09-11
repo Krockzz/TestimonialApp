@@ -87,6 +87,7 @@ catch (error) {
 }
    
 const RegisterUser = asyncHandler(async (req , res) => {
+    
  await new Promise((resolve) => setTimeout(resolve , 3000))
     const {Username, email, password}  = req.body;
 

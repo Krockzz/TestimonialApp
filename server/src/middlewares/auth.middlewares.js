@@ -17,11 +17,6 @@ export const verifyJwt = asyncHandler(async(req, res , next) => {
             "Unauthorized request!"
         )
     }
-        
-
-    // const decodedToken = jwt.verify(token , process.env.ACCESS_TOKEN_SECRET)
-
-    // console.log("So the token is",token)
 
     let decodedToken;
 

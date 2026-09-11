@@ -29,7 +29,6 @@ const API_URL = import.meta.env.VITE_API_URL;
       );
     }
 
-    // Extracting  cookies from backend response headers
   const cookies = res.headers.get("Set-Cookie");
 
     return redirect("/space" ,

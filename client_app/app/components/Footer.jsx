@@ -52,8 +52,11 @@ export default function Footer() {
           </p>
         </div> 
       </div>
- 
-   
+
+        <div>
+
+          <iframe src="http://localhost:5173/69676799c183624440132015/embed?borderColor=%239CA3AF&borderWidth=14&borderRadius=20px&textColor=%233B82F6&fontFamily=%27Roboto%27%2C+sans-serif&designStyle=center&cardColor=%23FFFFFF&backgroundColor=%23ffffff" width="450" height="300"  loading="lazy"></iframe>
+        </div>
 
 
 

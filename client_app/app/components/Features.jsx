@@ -2,10 +2,20 @@ import FeatureCard from "./FeatureCard.jsx";
 
 export default function Features() {
   return (
+
+  <>
+      <div>
+          <iframe src="http://localhost:5173/69033593498641a3be5e84ca/embed/carousel?spaceId=69033593498641a3be5e84ca&theme=light&cardSize=medium&bg=%231f2937&mode=auto" width="100%" height="350" style = {{border : "none"}} loading="lazy"></iframe>
+
+        </div>
+
+
     <section className="py-16 px-6 bg-gray-900">
       <h2 className="text-2xl font-semibold text-center mb-12 text-white">Why Choose Us?</h2>
 
       <div className="flex flex-row space-x-1">
+
+       
        
        
 
@@ -25,5 +35,7 @@ export default function Features() {
         />
       </div>
     </section>
+
+    </>
   );
 }
