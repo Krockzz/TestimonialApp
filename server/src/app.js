@@ -25,9 +25,11 @@ app.use(express.urlencoded({
 
 app.use(cookieParser());
 
+app.set("trust proxy", 1);
+
 app.use(
   session({
-    secret: "supersecretkey",
+    secret: process.env.SECRET_KEY,
     resave: false,
     saveUninitialized: false,
     store: MongoStore.create({ mongoUrl: process.env.MongoDb_URI}),
@@ -40,14 +42,11 @@ app.use(
   })
 );
 
-
-
-
 app.use(passport.initialize());
 
 app.use(passport.session());
 
-app.set("trust proxy", 1);
+
 
 
 

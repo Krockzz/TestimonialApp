@@ -7,6 +7,8 @@ import SpacesList from "../components/SpaceList";
 
 
 export async function loader({ request }) {
+
+
  
   const cookieHeader = request.headers.get("cookie") || "";
 
