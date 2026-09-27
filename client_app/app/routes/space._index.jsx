@@ -1,4 +1,4 @@
-import { json, redirect } from "@remix-run/react";
+import { json, redirect } from "@remix-run/node";
 import { useLoaderData } from "@remix-run/react";
 import { FaLayerGroup } from "react-icons/fa";
 import SpacesList from "../components/SpaceList";
@@ -22,24 +22,9 @@ export async function loader({ request }) {
   });
 
   // If unauthorized, redirect to login
- if ([400, 401, 403].includes(res.status)) {
-    const errorText = await res.text();
-
-    console.log("Starting")
-
-    console.log("getSpaces status:", res.status);
-    console.log("getSpaces response:", errorText);
-    console.log("Forwarded cookie:", cookieHeader);
-
-    return json(
-        {
-            error: true,
-            status: res.status,
-            response: errorText,
-        },
-        { status: res.status }
-    );
-}
+  if ([400 , 401, 403].includes(res.status)) {
+    return redirect("/login");
+  }
 
   const data = await res.json();
   console.log("this is the space data:", data)
