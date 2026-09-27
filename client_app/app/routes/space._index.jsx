@@ -25,6 +25,8 @@ export async function loader({ request }) {
  if ([400, 401, 403].includes(res.status)) {
     const errorText = await res.text();
 
+    console.log("Starting")
+
     console.log("getSpaces status:", res.status);
     console.log("getSpaces response:", errorText);
     console.log("Forwarded cookie:", cookieHeader);
