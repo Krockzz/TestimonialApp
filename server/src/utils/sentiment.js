@@ -15,7 +15,7 @@ export async function analyzeSentiment(text) {
 
     sentiment = await pipeline("text-classification", "Xenova/distilbert-base-uncased-finetuned-sst-2-english", {
       model: modelPath,
-      quantized: false
+      quantized: true
     });
   }
 
