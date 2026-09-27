@@ -29,7 +29,7 @@ const downloadAndUploadGoogleAvatar = async (url) => {
 
     return uploadResult.secure_url;
   } catch (err) {
-    console.error("Error downloading/uploading Google avatar:", err);
+    console.log("Error downloading/uploading Google avatar:", err);
     return null;
   }
 };
