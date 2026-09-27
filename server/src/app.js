@@ -9,6 +9,14 @@ import MongoStore from "connect-mongo";
 // Creating an instance of express server
 const app = express();
 
+app.get("/health", (req, res) => {
+  res.status(200).json({
+    status: "OK",
+    message: "Testimonial server is running"
+  });
+});
+
+
 app.use(cors({
     origin: process.env.CORS_ORIGIN || "http://localhost:5173",
     credentials: true,
