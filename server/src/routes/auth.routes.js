@@ -1,15 +1,19 @@
-// routes/auth.routes.js
 import { Router } from "express";
 import passport from "passport";
 
 const router = Router();
-// CORS_ORIGIN=https://testimonia-delta.vercel.app
-const FRONTEND_URL = "http://localhost:5173";
+
+const FRONTEND_URL =
+  process.env.FRONTEND_URL || "http://localhost:5173";
+
+const isProduction = process.env.NODE_ENV === "production";
 
 // Step 1: Start Google Login
 router.get(
   "/google",
-  passport.authenticate("google", { scope: ["profile", "email"] })
+  passport.authenticate("google", {
+    scope: ["profile", "email"],
+  })
 );
 
 // Step 2: Google Callback
@@ -24,27 +28,27 @@ router.get(
       const accessToken = req.user.GenerateAccessTokens();
       const refreshTokens = req.user.GenerateRefreshTokens();
 
-      // Save refresh token in DB
       req.user.refreshTokens = refreshTokens;
       await req.user.save();
 
-      // Send as cookies
       res.cookie("accessToken", accessToken, {
         httpOnly: true,
-        secure: false, // set true in production (HTTPS)
-        sameSite: "lax",
+        secure: isProduction,
+        sameSite: isProduction ? "none" : "lax",
       });
 
       res.cookie("refreshTokens", refreshTokens, {
         httpOnly: true,
-        secure: false,
-        sameSite: "lax",
+        secure: isProduction,
+        sameSite: isProduction ? "none" : "lax",
       });
 
       res.redirect(`${FRONTEND_URL}/space`);
+
     } catch (error) {
       console.error("Google login error:", error);
-      res.redirect("http://localhost:5173/login?error=true");
+
+      res.redirect(`${FRONTEND_URL}/login?error=true`);
     }
   }
 );
@@ -53,18 +57,23 @@ router.get(
 router.get("/logout", async (req, res) => {
   try {
     if (req.user) {
-      req.user.refreshTokens = null; // clear stored refresh token
+      req.user.refreshTokens = null;
       await req.user.save();
     }
 
-    // Clear cookies
     res.clearCookie("accessToken");
     res.clearCookie("refreshTokens");
 
-    res.status(200).json({ message: "Logged out successfully" });
+    res.status(200).json({
+      message: "Logged out successfully",
+    });
+
   } catch (error) {
     console.error("Logout error:", error);
-    res.status(500).json({ message: "Logout failed" });
+
+    res.status(500).json({
+      message: "Logout failed",
+    });
   }
 });
 
