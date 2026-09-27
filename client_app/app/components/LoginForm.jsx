@@ -78,7 +78,7 @@ const API_URI = import.meta.env.VITE_API_URL;
 
       {/* Continue with Google */}
       <a
-        href= "https://testimonialapp.onrender.com/api/v1/auth/google"
+         href={`${API_URI}/api/v1/auth/google`}
         className="flex items-center justify-center gap-3 w-full py-2.5 px-4 rounded-xl shadow-md bg-white text-gray-700 font-medium transition-all duration-300 transform hover:scale-105 hover:shadow-xl active:scale-95"
       >
         <FcGoogle className="text-xl" />
