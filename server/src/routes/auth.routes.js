@@ -46,7 +46,7 @@ router.get(
       res.redirect(`${FRONTEND_URL}/space`);
 
     } catch (error) {
-      console.error("Google login error:", error);
+      console.log("Google login error:", error);
 
       res.redirect(`${FRONTEND_URL}/login?error=true`);
     }
@@ -69,7 +69,7 @@ router.get("/logout", async (req, res) => {
     });
 
   } catch (error) {
-    console.error("Logout error:", error);
+    console.log("Logout error:", error);
 
     res.status(500).json({
       message: "Logout failed",
