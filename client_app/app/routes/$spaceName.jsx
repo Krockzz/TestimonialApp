@@ -177,7 +177,7 @@ export default function SpacePublicPage() {
           </button>
         </div>
 
-        {/* Testimonial Form */}
+
         {showForm && (
           <TestimonialForm
             space={space}
