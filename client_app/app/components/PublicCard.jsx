@@ -32,7 +32,7 @@ export default function PublicCard({ testimonial }) {
     year: "numeric",
   });
 
-  // ✅ Platform Icon
+
   const getPlatformIcon = (sourceType) => {
     if (sourceType === "twitter") {
       return <FaXTwitter className="text-black dark:text-white" size={16} />;
@@ -57,7 +57,7 @@ export default function PublicCard({ testimonial }) {
         dark:border-zinc-800 dark:from-zinc-900 dark:via-zinc-900 dark:to-zinc-800
       "
     >
-      {/* 🔥 PLATFORM BADGE */}
+
       {sourceType && (
         <div
           className="
@@ -80,7 +80,7 @@ export default function PublicCard({ testimonial }) {
         </div>
       )}
 
-      {/* ================= NORMAL VIDEO ================= */}
+  
       {isVideo && sourceType !== "youtube" && (
         <div className="relative h-[280px] w-full overflow-hidden rounded-3xl">
           <video
